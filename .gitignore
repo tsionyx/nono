@@ -1,5 +1,8 @@
 /target
 **/*.rs.bk
+bin/
+pkg/
+wasm-pack.log
 
 # IDEA
 /.idea/workspace.xml
