@@ -2,9 +2,32 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Hello wasm-pack!</title>
+    <title>Solve nonograms with Rust and WASM</title>
+    <style>
+        body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            //height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        input#puzzleId {
+          margin-right: 10px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   </head>
   <body>
-    <script src="./bootstrap.js"></script>
+    <div>
+      <input type="text" id="puzzleId" placeholder="Enter ID of the puzzle here">
+      <button id="get">Get puzzle</button>
+    </div>
+    <pre id="nonoCanvas"></pre>
+      <script src="./bootstrap.js"></script>
+    <button id="solve">Solve!</button>
   </body>
 </html>
