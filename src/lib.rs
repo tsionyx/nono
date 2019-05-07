@@ -59,15 +59,15 @@ pub fn webpbn_board(id: u16, content: String) -> String {
 }
 
 #[wasm_bindgen]
-pub fn solve(id: u16, multi_color: bool) -> String {
-    if multi_color {
-        let board = Arc::clone(&COLORED_BOARDS.lock().unwrap()[&id]);
+pub fn solve(id: u16) -> String {
+    if let Some(board) = BINARY_BOARDS.lock().unwrap().get(&id) {
+        let board = Arc::clone(&board);
         solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(Arc::clone(&board), Some(2), None, None)
             .unwrap();
 
         ShellRenderer::with_board(board).render()
     } else {
-        let board = Arc::clone(&BINARY_BOARDS.lock().unwrap()[&id]);
+        let board = Arc::clone(&COLORED_BOARDS.lock().unwrap()[&id]);
         solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(Arc::clone(&board), Some(2), None, None)
             .unwrap();
 

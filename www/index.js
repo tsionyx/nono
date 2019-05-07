@@ -51,7 +51,7 @@ function initPuzzle(id) {
 
 function solvePuzzle(id) {
     console.time("solve puzzle #" + id);
-    const renderedBoard = solve(id, false);
+    const renderedBoard = solve(id);
     console.timeEnd("solve puzzle #" + id);
 
     const pre = document.getElementById("nonoCanvas");
