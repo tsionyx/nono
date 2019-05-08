@@ -13,7 +13,7 @@ default = ["console_error_panic_hook"]
 [dependencies]
 wasm-bindgen = "0.2"
 lazy_static = "1.3.0"
-nonogrid = {git = "https://github.com/tsionyx/nonogrid", branch="dev"}
+nonogrid = {git = "https://github.com/tsionyx/nonogrid", branch="dev", features=["threaded"]}
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
