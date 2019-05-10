@@ -175,7 +175,7 @@ dependencies = [
 [[package]]
 name = "nonogrid"
 version = "0.2.0"
-source = "git+https://github.com/tsionyx/nonogrid?branch=dev#3e46f6117fff2aa00878a46663fef0be65662071"
+source = "git+https://github.com/tsionyx/nonogrid?branch=dev#958c1c6f21f451ff31552e45e65ebc9b3946e000"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",

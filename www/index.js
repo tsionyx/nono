@@ -1,4 +1,6 @@
-import {webpbn_board, solve} from "nono";
+import {webpbn_board, solve, WasmRenderer} from "nono";
+import { memory } from "nono/nono_bg";
+
 
 // https://jsfiddle.net/emkey08/zgvtjc51
 // Restricts input for the given textbox to the given inputFilter.
@@ -45,13 +47,113 @@ function initPuzzle(id) {
         success: function(data, status) {
             //console.log("data", data);
             const renderedBoard = webpbn_board(id, data);
-
-            const pre = document.getElementById("nonoCanvas");
-            pre.textContent = renderedBoard;
+            //const pre = document.getElementById("nonoCanvas");
+            //pre.textContent = renderedBoard;
+            renderPuzzleDesc(id);
         },
+        //headers: {"X-Requested-With": "foo"},
         dataType: 'html',
     });
     window.currentPuzzle = id;
+}
+
+const CELL_SIZE = 20; // px
+const GRID_COLOR = "#CCCCCC";
+const BLANK_COLOR = "#FFFFFF";
+const BOX_COLOR = "#000000";
+
+function renderBlock(ctx, value, intColor, x, y) {
+    const verticalOffset = CELL_SIZE * 0.8;
+    const horizontalOffset = CELL_SIZE * 0.15;
+
+    let blockColor = '#' + intColor.toString(16).padStart(6, '0');
+    ctx.fillStyle = blockColor;
+    ctx.fillRect(
+            x * (CELL_SIZE + 1) + 1,
+            y * (CELL_SIZE + 1) + 1,
+            CELL_SIZE,
+            CELL_SIZE
+          );
+
+    let textColor = "black";
+    if (blockColor === "#000000") {
+        textColor = "white";
+    }
+    ctx.fillStyle = textColor;
+    //console.log(colIndex, rowIndex);
+    ctx.fillText(
+        value,
+        x * (CELL_SIZE + 1) + horizontalOffset,
+        y * (CELL_SIZE + 1) + verticalOffset,
+    );
+}
+
+function renderPuzzleDesc(id) {
+    const desc = WasmRenderer.from_board(id);
+
+    const height = desc.full_height();
+    const width = desc.full_width();
+
+    const canvas = document.getElementById("nonoCanvas");
+    canvas.height = (CELL_SIZE + 1) * height + 1;
+    canvas.width = (CELL_SIZE + 1) * width + 1;
+
+    const ctx = canvas.getContext('2d');
+    const rows_number = desc.rows_number();
+    const cols_number = desc.cols_number();
+    const rows_side_size = width - cols_number;
+    const cols_header_size = height - rows_number;
+    drawGrid(ctx, rows_side_size, cols_header_size, width, height);
+
+    ctx.beginPath();
+    const fontSize = CELL_SIZE * 0.7;
+    ctx.font = fontSize + "px Verdana";
+
+    for (let i = 0; i < rows_number; i++) {
+        const row = desc.get_row(i);
+        const rowColors = desc.get_row_colors(i);
+
+        const rowOffset = rows_side_size - row.length;
+        const rowIndex = cols_header_size + i;
+
+        for (let j = 0; j < row.length; j++) {
+            const colIndex = rowOffset + j;
+            renderBlock(ctx, row[j], rowColors[j], colIndex, rowIndex);
+        }
+    }
+
+    for (let i = 0; i < cols_number; i++) {
+        const col = desc.get_column(i);
+        const colColors = desc.get_column_colors(i);
+
+        const colOffset = cols_header_size - col.length;
+        const colIndex = rows_side_size + i;
+
+        for (let j = 0; j < col.length; j++) {
+            const rowIndex = colOffset + j;
+            renderBlock(ctx, col[j], colColors[j], colIndex, rowIndex);
+        }
+    }
+    ctx.stroke();
+}
+
+function drawGrid(ctx, x_start, y_start, width, height) {
+  ctx.beginPath();
+  ctx.strokeStyle = GRID_COLOR;
+
+  // Vertical lines.
+  for (let i = x_start; i <= width; i++) {
+    ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
+    ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+  }
+
+  // Horizontal lines.
+  for (let j = y_start; j <= height; j++) {
+    ctx.moveTo(0,                           j * (CELL_SIZE + 1) + 1);
+    ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
+  }
+
+  ctx.stroke();
 }
 
 function solvePuzzle(id) {
