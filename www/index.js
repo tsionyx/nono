@@ -33,6 +33,11 @@ function submitEnterForInput(textbox, button) {
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
 
 function initPuzzle(id) {
+    if (!id) {
+        console.log("Bad puzzle id: ", id);
+        return;
+    }
+
     // const url = CORS_PROXY + "http://www.nonograms.org/nonograms/i/21251";
     const url = CORS_PROXY + "http://www.webpbn.com/XMLpuz.cgi?id=";
     $.get({
@@ -71,4 +76,11 @@ $(document).ready(function() {
     $("#solve").on("click", function() {
         solvePuzzle(window.currentPuzzle);
     });
+
+    const puzzleId = parseInt(document.location.search.split('id=')[1]);
+    if (puzzleId) {
+        //console.log(puzzleId);
+        $("#puzzleId").val(puzzleId);
+    }
+    $("#get").trigger("click");
 });
