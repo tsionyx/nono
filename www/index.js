@@ -1,4 +1,4 @@
-import {webpbn_board, solve, WasmRenderer} from "nono";
+import {webpbn_board, solve, WasmRenderer, white_color_code} from "nono";
 import { memory } from "nono/nono_bg";
 
 
@@ -61,6 +61,8 @@ const CELL_SIZE = 20; // px
 const GRID_COLOR = "#CCCCCC";
 const BLANK_COLOR = "#FFFFFF";
 const BOX_COLOR = "#000000";
+const WHITE_COLOR_CODE = white_color_code();
+//const UNKNOWN_COLOR_CODE = unknown_color_code();
 
 function renderBlock(ctx, value, intColor, x, y) {
     const verticalOffset = CELL_SIZE * 0.8;
@@ -141,6 +143,62 @@ function renderPuzzleDesc(id) {
     ctx.stroke();
 }
 
+function renderPuzzleCells(id) {
+    const desc = WasmRenderer.from_board(id);
+    const height = desc.full_height();
+    const width = desc.full_width();
+    const rows_number = desc.rows_number();
+    const cols_number = desc.cols_number();
+    const rows_side_size = width - cols_number;
+    const cols_header_size = height - rows_number;
+    const cells = desc.cells_as_colors();
+    const whiteDotSize = CELL_SIZE / 10;
+    const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
+
+    const canvas = document.getElementById("nonoCanvas");
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    for (let i = 0; i < rows_number; i++) {
+        const rowStartIndex = i * cols_number;
+        const y = cols_header_size + i;
+
+        for (let j = 0; j < cols_number; j++) {
+            const index = rowStartIndex + j;
+            const intColor = cells[index];
+            const x = rows_side_size + j;
+
+            if (intColor >= 0) {
+                let blockColor = '#' + intColor.toString(16).padStart(6, '0');
+                ctx.fillStyle = blockColor;
+                ctx.fillRect(
+                        x * (CELL_SIZE + 1) + 1,
+                        y * (CELL_SIZE + 1) + 1,
+                        CELL_SIZE,
+                        CELL_SIZE
+                      );
+            }
+            else if (intColor == WHITE_COLOR_CODE) {
+                ctx.fillStyle = "black";
+                // ctx.arc(
+                //     x * (CELL_SIZE + 1) + 1 + CELL_SIZE / 2,
+                //     y * (CELL_SIZE + 1) + 1  + CELL_SIZE / 2,
+                //     whiteDotSize,
+                //     0, 2 * Math.PI
+                // );
+                // ctx.fill();
+                //ctx.closePath();
+                ctx.fillRect(
+                    x * (CELL_SIZE + 1) + 1 + whiteDotOffset,
+                    y * (CELL_SIZE + 1) + 1  + whiteDotOffset,
+                    whiteDotSize,
+                    whiteDotSize,
+                );
+            }
+        }
+    }
+    ctx.stroke();
+}
+
 function drawGrid(ctx, x_start, y_start, width, height) {
   ctx.beginPath();
   ctx.strokeStyle = GRID_COLOR;
@@ -165,8 +223,9 @@ function solvePuzzle(id) {
     const renderedBoard = solve(id);
     console.timeEnd("solve puzzle #" + id);
 
-    const pre = document.getElementById("nonoCanvas");
-    pre.textContent = renderedBoard;
+    renderPuzzleCells(id);
+    //const pre = document.getElementById("nonoCanvas");
+    //pre.textContent = renderedBoard;
 }
 
 $(document).ready(function() {

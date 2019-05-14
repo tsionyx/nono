@@ -24,6 +24,14 @@ where
     color_cache: RefCell<HashMap<ColorId, Option<u32>>>,
 }
 
+const WHITE_COLOR_CODE: i32 = -1;
+const UNKNOWN_COLOR_CODE: i32 = -2;
+
+#[wasm_bindgen]
+pub fn white_color_code() -> i32 {
+    WHITE_COLOR_CODE
+}
+
 impl<B> BoardWrapper<B>
 where
     B: Block,
@@ -122,6 +130,32 @@ where
             .map(|x| self.rgb_for_block(x).unwrap_or(0))
             .collect()
     }
+
+    fn cells_as_colors(&self) -> Vec<i32> {
+        self.board
+            .read()
+            .iter_rows()
+            .flatten()
+            .map(|cell| {
+                if cell == &B::Color::blank() {
+                    return WHITE_COLOR_CODE;
+                }
+
+                let color_id = cell.as_color_id();
+                // BinaryColor
+                if color_id.is_none() {
+                    return if !cell.is_solved() {
+                        UNKNOWN_COLOR_CODE
+                    } else {
+                        0 // (0, 0, 0) = black color
+                    };
+                }
+
+                self.color_for_id(color_id.unwrap())
+                    .map_or(UNKNOWN_COLOR_CODE, |x| x as i32)
+            })
+            .collect()
+    }
 }
 
 #[wasm_bindgen]
@@ -208,6 +242,14 @@ impl WasmRenderer {
             .as_ref()
             .map(|ds| ds.get_column_colors(i))
             .or_else(|| self.colored.as_ref().map(|ds| ds.get_column_colors(i)))
+            .expect("At least one option should be set")
+    }
+
+    pub fn cells_as_colors(&self) -> Vec<i32> {
+        self.binary
+            .as_ref()
+            .map(|ds| ds.cells_as_colors())
+            .or_else(|| self.colored.as_ref().map(|ds| ds.cells_as_colors()))
             .expect("At least one option should be set")
     }
 }
