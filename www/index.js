@@ -67,6 +67,10 @@ function renderBlock(ctx, value, intColor, x, y) {
     const horizontalOffset = CELL_SIZE * 0.15;
 
     let blockColor = '#' + intColor.toString(16).padStart(6, '0');
+    if (blockColor === "#ffffff") {
+        // for more visual attention
+        blockColor = "#cccccc";
+    }
     ctx.fillStyle = blockColor;
     ctx.fillRect(
             x * (CELL_SIZE + 1) + 1,

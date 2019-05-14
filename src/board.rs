@@ -84,9 +84,15 @@ where
                 Some(rgb.0 as u32 * (1 << 16) + rgb.1 as u32 * (1 << 8) + rgb.2 as u32)
             })
     }
+
     fn rgb_for_block(&self, block: &B) -> Option<u32> {
-        let color_id = block.color().as_color_id()?;
-        self.color_for_id(color_id)
+        let color_id = block.color().as_color_id();
+        // BinaryColor
+        if color_id.is_none() {
+            // (255, 255, 255) = white color
+            return Some((1 << 24) - 1);
+        }
+        self.color_for_id(color_id.unwrap())
     }
 
     fn get_row(&self, i: usize) -> Vec<u16> {
