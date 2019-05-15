@@ -1,5 +1,4 @@
 import {webpbn_board, solve, WasmRenderer, white_color_code} from "nono";
-import { memory } from "nono/nono_bg";
 
 
 // https://jsfiddle.net/emkey08/zgvtjc51
@@ -61,7 +60,6 @@ const CELL_SIZE = 20; // px
 const GRID_COLOR = "#CCCCCC";
 const BLANK_COLOR = "#FFFFFF";
 const BOX_COLOR = "#000000";
-const WHITE_COLOR_CODE = white_color_code();
 //const UNKNOWN_COLOR_CODE = unknown_color_code();
 
 function renderBlock(ctx, value, intColor, x, y) {
@@ -154,6 +152,7 @@ function renderPuzzleCells(id) {
     const cells = desc.cells_as_colors();
     const whiteDotSize = CELL_SIZE / 10;
     const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
+    const WHITE_COLOR_CODE = white_color_code();
 
     const canvas = document.getElementById("nonoCanvas");
     const ctx = canvas.getContext('2d');
@@ -228,7 +227,7 @@ function solvePuzzle(id) {
     //pre.textContent = renderedBoard;
 }
 
-$(document).ready(function() {
+function initPage() {
     setInputFilter(document.getElementById("puzzleId"), function(value) {
         return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 40000); });
 
@@ -248,4 +247,8 @@ $(document).ready(function() {
         $("#puzzleId").val(puzzleId);
     }
     $("#get").trigger("click");
+}
+
+$(document).ready(function() {
+    initPage();
 });
