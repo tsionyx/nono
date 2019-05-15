@@ -1,4 +1,9 @@
-import {webpbn_board, solve, WasmRenderer, white_color_code} from "nono";
+const {webpbn_board, solve, WasmRenderer, white_color_code} = wasm_bindgen;
+
+
+async function initWasm() {
+    await wasm_bindgen('./nono_bg.wasm');
+}
 
 
 // https://jsfiddle.net/emkey08/zgvtjc51
@@ -252,5 +257,6 @@ function initPage() {
 }
 
 $(document).ready(function() {
+    initWasm();
     initPage();
 });
