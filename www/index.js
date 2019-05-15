@@ -1,11 +1,3 @@
-const {webpbn_board, solve, WasmRenderer, white_color_code} = wasm_bindgen;
-
-
-async function initWasm() {
-    await wasm_bindgen('./nono_bg.wasm');
-}
-
-
 // https://jsfiddle.net/emkey08/zgvtjc51
 // Restricts input for the given textbox to the given inputFilter.
 function setInputFilter(textbox, inputFilter) {
@@ -36,6 +28,41 @@ function submitEnterForInput(textbox, button) {
     });
 }
 
+
+var worker = new Worker('worker.js');
+
+function workerCallback(e) {
+  var data = e.data;
+
+  console.log("Got response from worker: ", data);
+  if (data.error) {
+    console.error(data.error);
+  }
+
+  switch (data.result) {
+    case 'initBoard':
+      worker.postMessage({'cmd': 'renderDescriptions', 'id': data.id});
+      $("#solve").attr("disabled", false);
+      break;
+
+    case 'renderDescriptions':
+      renderPuzzleDesc(data.obj);
+      break;
+
+    case 'renderCells':
+      renderPuzzleCells(data.obj);
+      break;
+
+    case 'solvePuzzle':
+      worker.postMessage({'cmd': 'renderCells', 'id': data.id});
+      break;
+
+    default:
+      console.error('Unknown response from worker: ', data.result);
+  }
+}
+
+
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
 
 function initPuzzle(id) {
@@ -49,12 +76,7 @@ function initPuzzle(id) {
     $.get({
         url: url + id,
         success: function(data, status) {
-            //console.log("data", data);
-            webpbn_board(id, data);
-            //const pre = document.getElementById("nonoCanvas");
-            //pre.textContent = renderedBoard;
-            renderPuzzleDesc(id);
-            $("#solve").attr("disabled", false);
+            worker.postMessage({'cmd': 'initBoard', 'id': id, 'content': data});
         },
         //headers: {"X-Requested-With": "foo"},
         dataType: 'html',
@@ -66,7 +88,7 @@ const CELL_SIZE = 20; // px
 const GRID_COLOR = "#CCCCCC";
 const BLANK_COLOR = "#FFFFFF";
 const BOX_COLOR = "#000000";
-//const UNKNOWN_COLOR_CODE = unknown_color_code();
+const WHITE_COLOR_CODE = -1;
 
 function renderBlock(ctx, value, intColor, x, y) {
     const verticalOffset = CELL_SIZE * 0.8;
@@ -98,19 +120,17 @@ function renderBlock(ctx, value, intColor, x, y) {
     );
 }
 
-function renderPuzzleDesc(id) {
-    const desc = WasmRenderer.from_board(id);
-
-    const height = desc.full_height();
-    const width = desc.full_width();
+function renderPuzzleDesc(desc) {
+    const height = desc.full_height;
+    const width = desc.full_width;
 
     const canvas = document.getElementById("nonoCanvas");
     canvas.height = (CELL_SIZE + 1) * height + 1;
     canvas.width = (CELL_SIZE + 1) * width + 1;
 
     const ctx = canvas.getContext('2d');
-    const rows_number = desc.rows_number();
-    const cols_number = desc.cols_number();
+    const rows_number = desc.rows.length;
+    const cols_number = desc.cols.length;
     const rows_side_size = width - cols_number;
     const cols_header_size = height - rows_number;
     drawGrid(ctx, rows_side_size, cols_header_size, width, height);
@@ -120,8 +140,8 @@ function renderPuzzleDesc(id) {
     ctx.font = fontSize + "px Verdana";
 
     for (let i = 0; i < rows_number; i++) {
-        const row = desc.get_row(i);
-        const rowColors = desc.get_row_colors(i);
+        const row = desc.rows[i];
+        const rowColors = desc.rowsColors[i];
 
         const rowOffset = rows_side_size - row.length;
         const rowIndex = cols_header_size + i;
@@ -133,8 +153,8 @@ function renderPuzzleDesc(id) {
     }
 
     for (let i = 0; i < cols_number; i++) {
-        const col = desc.get_column(i);
-        const colColors = desc.get_column_colors(i);
+        const col = desc.cols[i];
+        const colColors = desc.colsColors[i];
 
         const colOffset = cols_header_size - col.length;
         const colIndex = rows_side_size + i;
@@ -147,18 +167,17 @@ function renderPuzzleDesc(id) {
     ctx.stroke();
 }
 
-function renderPuzzleCells(id) {
-    const desc = WasmRenderer.from_board(id);
-    const height = desc.full_height();
-    const width = desc.full_width();
-    const rows_number = desc.rows_number();
-    const cols_number = desc.cols_number();
+function renderPuzzleCells(desc) {
+    const height = desc.full_height;
+    const width = desc.full_width;
+
+    const rows_number = desc.rows_number;
+    const cols_number = desc.cols_number;
     const rows_side_size = width - cols_number;
     const cols_header_size = height - rows_number;
-    const cells = desc.cells_as_colors();
+    const cells = desc.cells_as_colors;
     const whiteDotSize = CELL_SIZE / 10;
     const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
-    const WHITE_COLOR_CODE = white_color_code();
 
     const canvas = document.getElementById("nonoCanvas");
     const ctx = canvas.getContext('2d');
@@ -223,15 +242,6 @@ function drawGrid(ctx, x_start, y_start, width, height) {
   ctx.stroke();
 }
 
-function solvePuzzle(id) {
-    console.time("solve puzzle #" + id);
-    solve(id);
-    console.timeEnd("solve puzzle #" + id);
-
-    renderPuzzleCells(id);
-    //const pre = document.getElementById("nonoCanvas");
-    //pre.textContent = renderedBoard;
-}
 
 function initPage() {
     setInputFilter(document.getElementById("puzzleId"), function(value) {
@@ -245,8 +255,10 @@ function initPage() {
 
     $("#solve").attr("disabled", true);
     $("#solve").on("click", function() {
-        solvePuzzle(window.currentPuzzle);
+        worker.postMessage({'cmd': 'solvePuzzle', 'id': window.currentPuzzle});
     });
+
+    worker.addEventListener('message', workerCallback, false);
 
     const puzzleId = parseInt(document.location.search.split('id=')[1]);
     if (puzzleId) {
@@ -257,6 +269,5 @@ function initPage() {
 }
 
 $(document).ready(function() {
-    initWasm();
     initPage();
 });
