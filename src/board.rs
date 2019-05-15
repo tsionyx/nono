@@ -27,6 +27,7 @@ where
 const WHITE_COLOR_CODE: i32 = -1;
 const UNKNOWN_COLOR_CODE: i32 = -2;
 
+#[allow(dead_code)]
 #[wasm_bindgen]
 pub fn white_color_code() -> i32 {
     WHITE_COLOR_CODE
@@ -89,7 +90,7 @@ where
             .or_insert_with(|| {
                 let color_desc = self.board.read().desc_by_id(color_id)?;
                 let rgb = color_desc.rgb_value();
-                Some(rgb.0 as u32 * (1 << 16) + rgb.1 as u32 * (1 << 8) + rgb.2 as u32)
+                Some(u32::from(rgb.0) * (1 << 16) + u32::from(rgb.1) * (1 << 8) + u32::from(rgb.2))
             })
     }
 
@@ -144,10 +145,10 @@ where
                 let color_id = cell.as_color_id();
                 // BinaryColor
                 if color_id.is_none() {
-                    return if !cell.is_solved() {
-                        UNKNOWN_COLOR_CODE
-                    } else {
+                    return if cell.is_solved() {
                         0 // (0, 0, 0) = black color
+                    } else {
+                        UNKNOWN_COLOR_CODE
                     };
                 }
 
@@ -184,32 +185,32 @@ impl WasmRenderer {
     pub fn rows_number(&self) -> usize {
         self.binary
             .as_ref()
-            .map(|ds| ds.rows_number())
-            .or_else(|| self.colored.as_ref().map(|ds| ds.rows_number()))
+            .map(BoardWrapper::rows_number)
+            .or_else(|| self.colored.as_ref().map(BoardWrapper::rows_number))
             .expect("At least one option should be set")
     }
 
     pub fn cols_number(&self) -> usize {
         self.binary
             .as_ref()
-            .map(|ds| ds.cols_number())
-            .or_else(|| self.colored.as_ref().map(|ds| ds.cols_number()))
+            .map(BoardWrapper::cols_number)
+            .or_else(|| self.colored.as_ref().map(BoardWrapper::cols_number))
             .expect("At least one option should be set")
     }
 
     pub fn full_height(&self) -> usize {
         self.binary
             .as_ref()
-            .map(|ds| ds.full_height())
-            .or_else(|| self.colored.as_ref().map(|ds| ds.full_height()))
+            .map(BoardWrapper::full_height)
+            .or_else(|| self.colored.as_ref().map(BoardWrapper::full_height))
             .expect("At least one option should be set")
     }
 
     pub fn full_width(&self) -> usize {
         self.binary
             .as_ref()
-            .map(|ds| ds.full_width())
-            .or_else(|| self.colored.as_ref().map(|ds| ds.full_width()))
+            .map(BoardWrapper::full_width)
+            .or_else(|| self.colored.as_ref().map(BoardWrapper::full_width))
             .expect("At least one option should be set")
     }
 
@@ -248,8 +249,8 @@ impl WasmRenderer {
     pub fn cells_as_colors(&self) -> Vec<i32> {
         self.binary
             .as_ref()
-            .map(|ds| ds.cells_as_colors())
-            .or_else(|| self.colored.as_ref().map(|ds| ds.cells_as_colors()))
+            .map(BoardWrapper::cells_as_colors)
+            .or_else(|| self.colored.as_ref().map(BoardWrapper::cells_as_colors))
             .expect("At least one option should be set")
     }
 }
