@@ -11,7 +11,7 @@ use nonogrid::{
     block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
     board::Board,
     parser::{BoardParser, PuzzleScheme, WebPbn},
-    render::{Renderer, ShellRenderer},
+    //render::{Renderer, ShellRenderer},
     solver::{
         self,
         line::{DynamicColor, DynamicSolver},
@@ -38,7 +38,7 @@ lazy_static! {
     static ref BOARDS: Mutex<HashMap<u16, VarBoard>> = Mutex::new(HashMap::new());
 }
 
-fn init_board<P: BoardParser>(id: u16, content: String) -> String {
+fn init_board<P: BoardParser>(id: u16, content: String) {
     let parser = P::with_content(content).unwrap();
     match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
@@ -49,7 +49,7 @@ fn init_board<P: BoardParser>(id: u16, content: String) -> String {
                 .lock()
                 .unwrap()
                 .insert(id, VarBoard::MultiColor(MutRc::clone(&board)));
-            ShellRenderer::with_board(board).render()
+            //ShellRenderer::with_board(board).render()
         }
         PuzzleScheme::BlackAndWhite => {
             let board = parser.parse();
@@ -59,14 +59,14 @@ fn init_board<P: BoardParser>(id: u16, content: String) -> String {
                 .lock()
                 .unwrap()
                 .insert(id, VarBoard::BlackAndWhite(MutRc::clone(&board)));
-            ShellRenderer::with_board(board).render()
+            //ShellRenderer::with_board(board).render()
         }
     }
 
     //thread::spawn(move || solve(id, multi_color));
 }
 
-fn solve_and_render<B>(board: &MutRc<Board<B>>) -> String
+fn solve_and_render<B>(board: &MutRc<Board<B>>)
 where
     B: Block + Display,
     B::Color: DynamicColor + Display,
@@ -74,16 +74,16 @@ where
     solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(MutRc::clone(&board), Some(2), None, None)
         .unwrap();
 
-    ShellRenderer::with_board(MutRc::clone(&board)).render()
+    //ShellRenderer::with_board(MutRc::clone(&board)).render()
 }
 
 #[wasm_bindgen]
-pub fn webpbn_board(id: u16, content: String) -> String {
+pub fn webpbn_board(id: u16, content: String) {
     init_board::<WebPbn>(id, content)
 }
 
 #[wasm_bindgen]
-pub fn solve(id: u16) -> String {
+pub fn solve(id: u16) {
     let board_wpapped = &BOARDS.lock().unwrap()[&id];
     match board_wpapped {
         VarBoard::BlackAndWhite(board) => solve_and_render(board),

@@ -50,7 +50,7 @@ function initPuzzle(id) {
         url: url + id,
         success: function(data, status) {
             //console.log("data", data);
-            const renderedBoard = webpbn_board(id, data);
+            webpbn_board(id, data);
             //const pre = document.getElementById("nonoCanvas");
             //pre.textContent = renderedBoard;
             renderPuzzleDesc(id);
@@ -225,7 +225,7 @@ function drawGrid(ctx, x_start, y_start, width, height) {
 
 function solvePuzzle(id) {
     console.time("solve puzzle #" + id);
-    const renderedBoard = solve(id);
+    solve(id);
     console.timeEnd("solve puzzle #" + id);
 
     renderPuzzleCells(id);
