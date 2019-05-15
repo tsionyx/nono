@@ -49,6 +49,7 @@ function initPuzzle(id) {
             //const pre = document.getElementById("nonoCanvas");
             //pre.textContent = renderedBoard;
             renderPuzzleDesc(id);
+            $("#solve").attr("disabled", false);
         },
         //headers: {"X-Requested-With": "foo"},
         dataType: 'html',
@@ -237,6 +238,7 @@ function initPage() {
         initPuzzle(parseInt($("#puzzleId").val()));
     });
 
+    $("#solve").attr("disabled", true);
     $("#solve").on("click", function() {
         solvePuzzle(window.currentPuzzle);
     });
