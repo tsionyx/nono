@@ -64,9 +64,8 @@ function initPuzzle(id) {
 }
 
 const CELL_SIZE = 20; // px
-const GRID_COLOR = "#CCCCCC";
+const GRID_COLOR = "#000000";
 const BLANK_COLOR = "#FFFFFF";
-const BOX_COLOR = "#000000";
 const WHITE_COLOR_CODE = -1;
 
 function renderBlock(ctx, value, intColor, x, y) {
@@ -104,8 +103,8 @@ function renderPuzzleDesc(desc) {
   const width = desc.full_width;
 
   const canvas = document.getElementById("nonoCanvas");
-  canvas.height = (CELL_SIZE + 1) * height + 1;
-  canvas.width = (CELL_SIZE + 1) * width + 1;
+  canvas.height = (CELL_SIZE + 1) * height + 3;
+  canvas.width = (CELL_SIZE + 1) * width + 3;
 
   const ctx = canvas.getContext('2d');
   const rows_number = desc.rows.length;
@@ -205,16 +204,31 @@ function drawGrid(ctx, x_start, y_start, width, height) {
   ctx.beginPath();
   ctx.strokeStyle = GRID_COLOR;
 
+  const lastX = width * (CELL_SIZE + 1) + 1
+  const lastY = height * (CELL_SIZE + 1) + 1;
+
   // Vertical lines.
   for (let i = x_start; i <= width; i++) {
-    ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
-    ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+    const currentX = i * (CELL_SIZE + 1) + 1;
+    ctx.moveTo(currentX, 0);
+    ctx.lineTo(currentX, lastY);
+
+    if ((i - x_start) % 5 == 0) {
+      ctx.moveTo(currentX + 1, 0);
+      ctx.lineTo(currentX + 1, lastY);
+    }
   }
 
   // Horizontal lines.
   for (let j = y_start; j <= height; j++) {
-    ctx.moveTo(0, j * (CELL_SIZE + 1) + 1);
-    ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
+    const currentY = j * (CELL_SIZE + 1) + 1;
+    ctx.moveTo(0, currentY);
+    ctx.lineTo(lastX, currentY);
+
+    if ((j - y_start) % 5 == 0) {
+      ctx.moveTo(0, currentY + 1);
+      ctx.lineTo(lastX, currentY + 1);
+    }
   }
 
   ctx.stroke();
