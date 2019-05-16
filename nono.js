@@ -96,48 +96,30 @@
             return ptr;
         };
     }
+    /**
+    * @param {number} id
+    * @param {string} content
+    * @returns {void}
+    */
+    __exports.webpbn_board = function(id, content) {
+        const ptr1 = passStringToWasm(content);
+        const len1 = WASM_VECTOR_LEN;
+        return wasm.webpbn_board(id, ptr1, len1);
+    };
+
+    /**
+    * @param {number} id
+    * @returns {void}
+    */
+    __exports.solve = function(id) {
+        return wasm.solve(id);
+    };
 
     let cachedTextDecoder = new TextDecoder('utf-8');
 
     function getStringFromWasm(ptr, len) {
         return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
     }
-    /**
-    * @param {number} id
-    * @param {string} content
-    * @returns {string}
-    */
-    __exports.webpbn_board = function(id, content) {
-        const ptr1 = passStringToWasm(content);
-        const len1 = WASM_VECTOR_LEN;
-        const retptr = globalArgumentPtr();
-        wasm.webpbn_board(retptr, id, ptr1, len1);
-        const mem = getUint32Memory();
-        const rustptr = mem[retptr / 4];
-        const rustlen = mem[retptr / 4 + 1];
-
-        const realRet = getStringFromWasm(rustptr, rustlen).slice();
-        wasm.__wbindgen_free(rustptr, rustlen * 1);
-        return realRet;
-
-    };
-
-    /**
-    * @param {number} id
-    * @returns {string}
-    */
-    __exports.solve = function(id) {
-        const retptr = globalArgumentPtr();
-        wasm.solve(retptr, id);
-        const mem = getUint32Memory();
-        const rustptr = mem[retptr / 4];
-        const rustlen = mem[retptr / 4 + 1];
-
-        const realRet = getStringFromWasm(rustptr, rustlen).slice();
-        wasm.__wbindgen_free(rustptr, rustlen * 1);
-        return realRet;
-
-    };
 
     __exports.__wbindgen_throw = function(ptr, len) {
         throw new Error(getStringFromWasm(ptr, len));
