@@ -1,5 +1,5 @@
 mod board;
-//mod utils;
+mod utils;
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -39,6 +39,7 @@ lazy_static! {
 }
 
 fn init_board<P: BoardParser>(id: u16, content: String) {
+    utils::set_panic_hook();
     let parser = P::with_content(content).unwrap();
     match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
