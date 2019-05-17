@@ -23,6 +23,10 @@
     button {
       margin-right: 10px;
     }
+
+    #buttons {
+      margin: 20px;
+    }
   </style>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 </head>
@@ -30,6 +34,10 @@
 <body>
   <div>
     <input type="text" id="puzzleId" placeholder="Enter ID of the puzzle here">
+    <input type="radio" name="source" value="http://webpbn.com" checked><a href="https://webpbn.com">http://webpbn.com</a>
+    <input type="radio" name="source" value="http://nonograms.org"><a href="http://nonograms.org">http://nonograms.org</a>
+  </div>
+  <div id="buttons">
     <button id="get">Get puzzle</button>
     <button id="solve" disabled>Solve!</button>
   </div>

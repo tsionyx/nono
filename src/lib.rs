@@ -10,7 +10,7 @@ use board::WasmRenderer;
 use nonogrid::{
     block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
     board::Board,
-    parser::{BoardParser, PuzzleScheme, WebPbn},
+    parser::{BoardParser, NonogramsOrg, PuzzleScheme, WebPbn},
     //render::{Renderer, ShellRenderer},
     solver::{
         self,
@@ -34,12 +34,21 @@ enum VarBoard {
     MultiColor(MutRc<Board<ColoredBlock>>),
 }
 
-lazy_static! {
-    static ref BOARDS: Mutex<HashMap<u16, VarBoard>> = Mutex::new(HashMap::new());
+#[wasm_bindgen]
+#[derive(Eq, PartialEq, Hash)]
+pub enum Source {
+    WebPbnCom,
+    NonogramsOrg,
 }
 
-fn init_board<P: BoardParser>(id: u16, content: String) {
+lazy_static! {
+    static ref BOARDS: Mutex<HashMap<(Source, u16), VarBoard>> = Mutex::new(HashMap::new());
+}
+
+fn init_board<P: BoardParser>(source: Source, id: u16, content: String) {
     utils::set_panic_hook();
+
+    let id = (source, id);
     let parser = P::with_content(content).unwrap();
     match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
@@ -79,13 +88,16 @@ where
 }
 
 #[wasm_bindgen]
-pub fn webpbn_board(id: u16, content: String) {
-    init_board::<WebPbn>(id, content)
+pub fn board_with_content(source: Source, id: u16, content: String) {
+    match source {
+        Source::WebPbnCom => init_board::<WebPbn>(source, id, content),
+        Source::NonogramsOrg => init_board::<NonogramsOrg>(source, id, content),
+    }
 }
 
 #[wasm_bindgen]
-pub fn solve(id: u16) {
-    let board_wpapped = &BOARDS.lock().unwrap()[&id];
+pub fn solve(source: Source, id: u16) {
+    let board_wpapped = &BOARDS.lock().unwrap()[&(source, id)];
     match board_wpapped {
         VarBoard::BlackAndWhite(board) => solve_and_render(board),
         VarBoard::MultiColor(board) => solve_and_render(board),
@@ -94,8 +106,8 @@ pub fn solve(id: u16) {
 
 #[wasm_bindgen]
 impl WasmRenderer {
-    pub fn from_board(id: u16) -> Self {
-        let board_wrapped = &BOARDS.lock().unwrap()[&id];
+    pub fn from_board(source: Source, id: u16) -> Self {
+        let board_wrapped = &BOARDS.lock().unwrap()[&(source, id)];
 
         match board_wrapped {
             VarBoard::BlackAndWhite(ref board) => Self::with_binary_board(board),

@@ -8,11 +8,15 @@ function workerCallback(e) {
     console.error(data.error);
   }
 
+  const id = data.id;
+  const source = data.source;
+
   switch (data.result) {
     case 'initBoard':
       worker.postMessage({
         'cmd': 'renderDescriptions',
-        'id': data.id
+        'source': source,
+        'id': id,
       });
       $("#solve").attr("disabled", false);
       break;
@@ -28,7 +32,8 @@ function workerCallback(e) {
     case 'solvePuzzle':
       worker.postMessage({
         'cmd': 'renderCells',
-        'id': data.id
+        'source': source,
+        'id': id,
       });
       break;
 
@@ -39,20 +44,27 @@ function workerCallback(e) {
 
 
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
+const WEBPBN_SOURCE_URL = "http://webpbn.com";
+const NONOGRAMS_SOURCE_URL = "http://nonograms.org";
 
-function initPuzzle(id) {
+let sourceUrlToPuzzleUrl = new Object;
+sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/XMLpuz.cgi?id=";
+sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + "/nonograms2/i/";
+
+
+function initPuzzle(sourceUrl, id) {
   if (!id) {
     console.log("Bad puzzle id: ", id);
     return;
   }
 
-  // const url = CORS_PROXY + "http://www.nonograms.org/nonograms/i/21251";
-  const url = CORS_PROXY + "http://www.webpbn.com/XMLpuz.cgi?id=";
+  const url = CORS_PROXY + sourceUrlToPuzzleUrl[sourceUrl];
   $.get({
     url: url + id,
     success: function(data, status) {
       worker.postMessage({
         'cmd': 'initBoard',
+        'source': sourceUrl,
         'id': id,
         'content': data
       });
@@ -60,6 +72,8 @@ function initPuzzle(id) {
     //headers: {"X-Requested-With": "foo"},
     dataType: 'html',
   });
+
+  window.currentSource = sourceUrl;
   window.currentPuzzle = id;
 }
 
@@ -274,13 +288,15 @@ function initPage() {
   submitEnterForInput(document.getElementById("puzzleId"), document.getElementById("get"));
 
   $("#get").on("click", function() {
-    initPuzzle(parseInt($("#puzzleId").val()));
+    const sourceUrl = $('input[name=source]:checked').val();
+    initPuzzle(sourceUrl, parseInt($("#puzzleId").val()));
   });
 
   $("#solve").attr("disabled", true);
   $("#solve").on("click", function() {
     worker.postMessage({
       'cmd': 'solvePuzzle',
+      'source': window.currentSource,
       'id': window.currentPuzzle
     });
   });

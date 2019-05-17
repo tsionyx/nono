@@ -1,7 +1,8 @@
 importScripts('nono.js');
 const {
   solve,
-  webpbn_board,
+  board_with_content,
+  Source,
   WasmRenderer
 } = wasm_bindgen;
 
@@ -10,11 +11,16 @@ async function init() {
   self.addEventListener('message', response, false);
 }
 
-function collectDataForDescriptionsRender(id) {
+const sourceUrlToName = {
+  'http://webpbn.com': Source.WebPbnCom,
+  'http://nonograms.org': Source.NonogramsOrg,
+};
+
+function collectDataForDescriptionsRender(source, id) {
   console.log("Worker collecting descriptions for puzzle #" + id);
 
   let result = {}
-  const desc = WasmRenderer.from_board(id);
+  const desc = WasmRenderer.from_board(source, id);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows = [];
@@ -37,11 +43,11 @@ function collectDataForDescriptionsRender(id) {
 }
 
 
-function collectDataForCellsRender(id) {
+function collectDataForCellsRender(source, id) {
   console.log("Worker collecting cells for puzzle #" + id);
 
   let result = {}
-  const desc = WasmRenderer.from_board(id);
+  const desc = WasmRenderer.from_board(source, id);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows_number = desc.rows_number();
@@ -53,20 +59,25 @@ function collectDataForCellsRender(id) {
 
 function response(e) {
   var data = e.data;
-  const id = data.id;
 
-  switch (data.cmd) {
+  const cmd = data.cmd;
+  const id = data.id;
+  const sourceUrl = data.source;
+  const sourceId = sourceUrlToName[sourceUrl];
+
+  switch (cmd) {
     case 'initBoard':
-      console.log("Worker initializing puzzle #" + id);
-      webpbn_board(id, data.content);
+      console.log("Worker initializing puzzle #" + id + " from source " + sourceUrl);
+      board_with_content(sourceId, id, data.content);
       self.postMessage({
         'result': 'initBoard',
-        'id': id
+        'source': sourceUrl,
+        'id': id,
       });
       break;
 
     case 'renderDescriptions':
-      const objDesc = collectDataForDescriptionsRender(id);
+      const objDesc = collectDataForDescriptionsRender(sourceId, id);
       self.postMessage({
         'result': 'renderDescriptions',
         'obj': objDesc
@@ -74,7 +85,7 @@ function response(e) {
       break;
 
     case 'renderCells':
-      const objCells = collectDataForCellsRender(id);
+      const objCells = collectDataForCellsRender(sourceId, id);
       self.postMessage({
         'result': 'renderCells',
         'obj': objCells
@@ -82,19 +93,20 @@ function response(e) {
       break;
 
     case 'solvePuzzle':
-      console.log("Worker starting to solve puzzle #" + id);
+      console.log("Worker starting to solve puzzle #" + id + " from source " + sourceUrl);
       console.time("solve puzzle #" + id);
-      solve(id);
+      solve(sourceId, id);
       console.timeEnd("solve puzzle #" + id);
       self.postMessage({
         'result': 'solvePuzzle',
+        'source': sourceUrl,
         'id': id
       });
       break;
 
     default:
       self.postMessage({
-        'error': 'Unknown command: ' + data.cmd
+        'error': 'Unknown command: ' + cmd
       });
   };
 }
