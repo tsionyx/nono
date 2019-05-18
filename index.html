@@ -21,7 +21,7 @@
     }
 
     button {
-      margin-right: 10px;
+      margin: 20px;
     }
   </style>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
@@ -30,9 +30,10 @@
 <body>
   <div>
     <input type="text" id="puzzleId" placeholder="Enter ID of the puzzle here">
-    <button id="get">Get puzzle</button>
-    <button id="solve" disabled>Solve!</button>
+    <input type="radio" name="source" value="http://webpbn.com" checked><a href="https://webpbn.com">http://webpbn.com</a>
+    <input type="radio" name="source" value="http://nonograms.org"><a href="http://nonograms.org">http://nonograms.org</a>
   </div>
+  <button id="get">Solve!</button>
   <canvas id="nonoCanvas"></canvas>
   <script src="./nono.js"></script>
   <script type="module" src="./index.js"></script>

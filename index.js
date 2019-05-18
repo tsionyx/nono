@@ -8,13 +8,21 @@ function workerCallback(e) {
     console.error(data.error);
   }
 
+  const id = data.id;
+  const source = data.source;
+
   switch (data.result) {
     case 'initBoard':
       worker.postMessage({
         'cmd': 'renderDescriptions',
-        'id': data.id
+        'source': source,
+        'id': id,
       });
-      $("#solve").attr("disabled", false);
+      worker.postMessage({
+        'cmd': 'solvePuzzle',
+        'source': source,
+        'id': id,
+      });
       break;
 
     case 'renderDescriptions':
@@ -28,7 +36,8 @@ function workerCallback(e) {
     case 'solvePuzzle':
       worker.postMessage({
         'cmd': 'renderCells',
-        'id': data.id
+        'source': source,
+        'id': id,
       });
       break;
 
@@ -39,34 +48,55 @@ function workerCallback(e) {
 
 
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
+const WEBPBN_SOURCE_URL = "http://webpbn.com";
+const NONOGRAMS_SOURCE_URL = "http://nonograms.org";
 
-function initPuzzle(id) {
+let sourceUrlToPuzzleUrl = new Object;
+sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/XMLpuz.cgi?id=";
+sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + "/nonograms2/i/";
+
+
+function initPuzzle(sourceUrl, id) {
   if (!id) {
     console.log("Bad puzzle id: ", id);
     return;
   }
 
-  // const url = CORS_PROXY + "http://www.nonograms.org/nonograms/i/21251";
-  const url = CORS_PROXY + "http://www.webpbn.com/XMLpuz.cgi?id=";
+  const url = CORS_PROXY + sourceUrlToPuzzleUrl[sourceUrl];
+  let workerPayload = {
+    'cmd': 'initBoard',
+    'source': sourceUrl,
+    'id': id,
+  };
   $.get({
     url: url + id,
     success: function(data, status) {
-      worker.postMessage({
-        'cmd': 'initBoard',
-        'id': id,
-        'content': data
-      });
+      workerPayload.content = data;
+      worker.postMessage(workerPayload);
     },
     //headers: {"X-Requested-With": "foo"},
     dataType: 'html',
+    error: function(xhr, status, error) {
+      if ((sourceUrl == NONOGRAMS_SOURCE_URL) && (xhr.status == 404)) {
+        const fixedUrl = url.replace("nonograms2", "nonograms");
+        console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
+        $.get({
+          url: fixedUrl + id,
+          success: function(data, status) {
+            workerPayload.content = data;
+            worker.postMessage(workerPayload);
+          },
+          //headers: {"X-Requested-With": "foo"},
+          dataType: 'html',
+        });
+      }
+    },
   });
-  window.currentPuzzle = id;
 }
 
 const CELL_SIZE = 20; // px
-const GRID_COLOR = "#CCCCCC";
+const GRID_COLOR = "#000000";
 const BLANK_COLOR = "#FFFFFF";
-const BOX_COLOR = "#000000";
 const WHITE_COLOR_CODE = -1;
 
 function renderBlock(ctx, value, intColor, x, y) {
@@ -104,8 +134,8 @@ function renderPuzzleDesc(desc) {
   const width = desc.full_width;
 
   const canvas = document.getElementById("nonoCanvas");
-  canvas.height = (CELL_SIZE + 1) * height + 1;
-  canvas.width = (CELL_SIZE + 1) * width + 1;
+  canvas.height = (CELL_SIZE + 1) * height + 3;
+  canvas.width = (CELL_SIZE + 1) * width + 3;
 
   const ctx = canvas.getContext('2d');
   const rows_number = desc.rows.length;
@@ -205,16 +235,31 @@ function drawGrid(ctx, x_start, y_start, width, height) {
   ctx.beginPath();
   ctx.strokeStyle = GRID_COLOR;
 
+  const lastX = width * (CELL_SIZE + 1) + 1
+  const lastY = height * (CELL_SIZE + 1) + 1;
+
   // Vertical lines.
   for (let i = x_start; i <= width; i++) {
-    ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
-    ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+    const currentX = i * (CELL_SIZE + 1) + 1;
+    ctx.moveTo(currentX, 0);
+    ctx.lineTo(currentX, lastY);
+
+    if ((i - x_start) % 5 == 0) {
+      ctx.moveTo(currentX + 1, 0);
+      ctx.lineTo(currentX + 1, lastY);
+    }
   }
 
   // Horizontal lines.
   for (let j = y_start; j <= height; j++) {
-    ctx.moveTo(0, j * (CELL_SIZE + 1) + 1);
-    ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
+    const currentY = j * (CELL_SIZE + 1) + 1;
+    ctx.moveTo(0, currentY);
+    ctx.lineTo(lastX, currentY);
+
+    if ((j - y_start) % 5 == 0) {
+      ctx.moveTo(0, currentY + 1);
+      ctx.lineTo(lastX, currentY + 1);
+    }
   }
 
   ctx.stroke();
@@ -260,15 +305,8 @@ function initPage() {
   submitEnterForInput(document.getElementById("puzzleId"), document.getElementById("get"));
 
   $("#get").on("click", function() {
-    initPuzzle(parseInt($("#puzzleId").val()));
-  });
-
-  $("#solve").attr("disabled", true);
-  $("#solve").on("click", function() {
-    worker.postMessage({
-      'cmd': 'solvePuzzle',
-      'id': window.currentPuzzle
-    });
+    const sourceUrl = $('input[name=source]:checked').val();
+    initPuzzle(sourceUrl, parseInt($("#puzzleId").val()));
   });
 
   worker.addEventListener('message', workerCallback, false);
