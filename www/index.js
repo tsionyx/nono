@@ -59,18 +59,34 @@ function initPuzzle(sourceUrl, id) {
   }
 
   const url = CORS_PROXY + sourceUrlToPuzzleUrl[sourceUrl];
+  let workerPayload = {
+    'cmd': 'initBoard',
+    'source': sourceUrl,
+    'id': id,
+  };
   $.get({
     url: url + id,
     success: function(data, status) {
-      worker.postMessage({
-        'cmd': 'initBoard',
-        'source': sourceUrl,
-        'id': id,
-        'content': data
-      });
+      workerPayload.content = data;
+      worker.postMessage(workerPayload);
     },
     //headers: {"X-Requested-With": "foo"},
     dataType: 'html',
+    error: function(xhr, status, error) {
+      if ((sourceUrl == NONOGRAMS_SOURCE_URL) && (xhr.status == 404)) {
+        const fixedUrl = url.replace("nonograms2", "nonograms");
+        console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
+        $.get({
+          url: fixedUrl + id,
+          success: function(data, status) {
+            workerPayload.content = data;
+            worker.postMessage(workerPayload);
+          },
+          //headers: {"X-Requested-With": "foo"},
+          dataType: 'html',
+        });
+      }
+    },
   });
 
   window.currentSource = sourceUrl;
