@@ -49,6 +49,12 @@ fn init_board<P: BoardParser>(source: Source, id: u16, content: String) {
     utils::set_panic_hook();
 
     let id = (source, id);
+
+    if BOARDS.lock().unwrap().contains_key(&id) {
+        // the board already here
+        return;
+    }
+
     let parser = P::with_content(content).unwrap();
     match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
