@@ -18,7 +18,11 @@ function workerCallback(e) {
         'source': source,
         'id': id,
       });
-      $("#solve").attr("disabled", false);
+      worker.postMessage({
+        'cmd': 'solvePuzzle',
+        'source': source,
+        'id': id,
+      });
       break;
 
     case 'renderDescriptions':
@@ -88,9 +92,6 @@ function initPuzzle(sourceUrl, id) {
       }
     },
   });
-
-  window.currentSource = sourceUrl;
-  window.currentPuzzle = id;
 }
 
 const CELL_SIZE = 20; // px
@@ -306,15 +307,6 @@ function initPage() {
   $("#get").on("click", function() {
     const sourceUrl = $('input[name=source]:checked').val();
     initPuzzle(sourceUrl, parseInt($("#puzzleId").val()));
-  });
-
-  $("#solve").attr("disabled", true);
-  $("#solve").on("click", function() {
-    worker.postMessage({
-      'cmd': 'solvePuzzle',
-      'source': window.currentSource,
-      'id': window.currentPuzzle
-    });
   });
 
   worker.addEventListener('message', workerCallback, false);
