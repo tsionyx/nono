@@ -95,10 +95,14 @@ function response(e) {
     case 'solvePuzzle':
       console.log("Worker starting to solve puzzle #" + id + " from source " + sourceUrl);
       console.time("solve puzzle #" + id);
+      const t0 = performance.now();
       solve(sourceId, id);
+      const t1 = performance.now();
       console.timeEnd("solve puzzle #" + id);
+
       self.postMessage({
         'result': 'solvePuzzle',
+        'time': t1 - t0,
         'source': sourceUrl,
         'id': id
       });

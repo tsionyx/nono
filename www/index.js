@@ -23,6 +23,7 @@ function workerCallback(e) {
         'source': source,
         'id': id,
       });
+      $("#timeToSolve").text("Solving puzzle #" + id + " from " + source + "...");
       break;
 
     case 'renderDescriptions':
@@ -34,6 +35,7 @@ function workerCallback(e) {
       break;
 
     case 'solvePuzzle':
+      $("#timeToSolve").text("Time to solve the puzzle #" + id + " from " + source + ": " + +data.time.toFixed(2) + "ms");
       worker.postMessage({
         'cmd': 'renderCells',
         'source': source,
