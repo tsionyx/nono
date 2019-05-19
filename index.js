@@ -23,6 +23,10 @@ function workerCallback(e) {
         'source': source,
         'id': id,
       });
+      $("#timeToSolve").text("Solving puzzle #" + id + " from " + source + "...");
+
+      $("#originalUrl").empty();
+      $("#originalUrl").append($("<a href=" + data.url + ">Original puzzle URL</a>"));
       break;
 
     case 'renderDescriptions':
@@ -34,6 +38,7 @@ function workerCallback(e) {
       break;
 
     case 'solvePuzzle':
+      $("#timeToSolve").text("Time to solve the puzzle #" + id + " from " + source + ": " + +data.time.toFixed(2) + "ms");
       worker.postMessage({
         'cmd': 'renderCells',
         'source': source,
@@ -62,16 +67,20 @@ function initPuzzle(sourceUrl, id) {
     return;
   }
 
-  const url = CORS_PROXY + sourceUrlToPuzzleUrl[sourceUrl];
+  const url = sourceUrlToPuzzleUrl[sourceUrl] + id;
   let workerPayload = {
     'cmd': 'initBoard',
     'source': sourceUrl,
     'id': id,
   };
+
+  let puzzleUrl = (sourceUrl == WEBPBN_SOURCE_URL) ? WEBPBN_SOURCE_URL + "/" + id: url;
+
   $.get({
-    url: url + id,
+    url: CORS_PROXY + url,
     success: function(data, status) {
       workerPayload.content = data;
+      workerPayload.url = puzzleUrl;
       worker.postMessage(workerPayload);
     },
     //headers: {"X-Requested-With": "foo"},
@@ -81,9 +90,10 @@ function initPuzzle(sourceUrl, id) {
         const fixedUrl = url.replace("nonograms2", "nonograms");
         console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
         $.get({
-          url: fixedUrl + id,
+          url: CORS_PROXY + fixedUrl,
           success: function(data, status) {
             workerPayload.content = data;
+            workerPayload.url = fixedUrl;
             worker.postMessage(workerPayload);
           },
           //headers: {"X-Requested-With": "foo"},
@@ -97,7 +107,6 @@ function initPuzzle(sourceUrl, id) {
 const CELL_SIZE = 20; // px
 const GRID_COLOR = "#000000";
 const BLANK_COLOR = "#FFFFFF";
-const WHITE_COLOR_CODE = -1;
 
 function renderBlock(ctx, value, intColor, x, y) {
   const verticalOffset = CELL_SIZE * 0.8;
@@ -187,6 +196,7 @@ function renderPuzzleCells(desc) {
   const cells = desc.cells_as_colors;
   const whiteDotSize = CELL_SIZE / 10;
   const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
+  const white_color_code = desc.white_color_code;
 
   const canvas = document.getElementById("nonoCanvas");
   const ctx = canvas.getContext('2d');
@@ -209,7 +219,7 @@ function renderPuzzleCells(desc) {
           CELL_SIZE,
           CELL_SIZE
         );
-      } else if (intColor == WHITE_COLOR_CODE) {
+      } else if (intColor == white_color_code) {
         ctx.fillStyle = "black";
         // ctx.arc(
         //     x * (CELL_SIZE + 1) + 1 + CELL_SIZE / 2,

@@ -2,6 +2,7 @@ importScripts('nono.js');
 const {
   solve,
   board_with_content,
+  white_color_code,
   Source,
   WasmRenderer
 } = wasm_bindgen;
@@ -53,6 +54,7 @@ function collectDataForCellsRender(source, id) {
   result.rows_number = desc.rows_number();
   result.cols_number = desc.cols_number();
   result.cells_as_colors = desc.cells_as_colors();
+  result.white_color_code = white_color_code();
 
   return result;
 }
@@ -71,6 +73,7 @@ function response(e) {
       board_with_content(sourceId, id, data.content);
       self.postMessage({
         'result': 'initBoard',
+        'url': data.url,
         'source': sourceUrl,
         'id': id,
       });
@@ -95,10 +98,14 @@ function response(e) {
     case 'solvePuzzle':
       console.log("Worker starting to solve puzzle #" + id + " from source " + sourceUrl);
       console.time("solve puzzle #" + id);
+      const t0 = performance.now();
       solve(sourceId, id);
+      const t1 = performance.now();
       console.timeEnd("solve puzzle #" + id);
+
       self.postMessage({
         'result': 'solvePuzzle',
+        'time': t1 - t0,
         'source': sourceUrl,
         'id': id
       });
