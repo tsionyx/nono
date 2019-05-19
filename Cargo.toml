@@ -1,5 +1,8 @@
 [package]
 name = "nono"
+description = "Efficient nonogram solver"
+license = "MIT"
+repository = "https://github.com/tsionyx/nono"
 version = "0.1.0"
 authors = ["Ivan Ladelshchikov <tsionyx@gmail.com>"]
 edition = "2018"

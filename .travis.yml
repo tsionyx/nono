@@ -1,0 +1,55 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+
+sudo: false
+cache:
+  - cargo
+  - directories:
+    - binaryen/
+
+addons:
+  apt:
+    packages:
+      - curl
+      - cmake
+      - git
+
+before_script:
+  - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
+  - test -d binaryen/.git || git clone https://github.com/WebAssembly/binaryen.git
+  - pushd binaryen && cmake . && make && popd
+
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+  - wasm-pack build --target no-modules --no-typescript
+  - ./binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
+
+matrix:
+  fast_finish: true
+
+before_deploy:
+  - cp www/*.html www/{index,worker}.js pkg/
+  - rm pkg/package.json
+
+stages:
+  - test
+  - deploy
+
+jobs:
+  include:
+    - stage: deploy
+      rust: stable
+      deploy:
+        provider: pages
+        # otherwise I constantly get an error:
+        # fatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.
+        keep_history: true
+        skip_cleanup: true
+        local_dir: pkg
+        github_token: $GITHUB_TOKEN
+        on:
+          branch: dev
