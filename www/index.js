@@ -24,6 +24,9 @@ function workerCallback(e) {
         'id': id,
       });
       $("#timeToSolve").text("Solving puzzle #" + id + " from " + source + "...");
+
+      $("#originalUrl").empty();
+      $("#originalUrl").append($("<a href=" + data.url + ">Original puzzle URL</a>"));
       break;
 
     case 'renderDescriptions':
@@ -64,16 +67,20 @@ function initPuzzle(sourceUrl, id) {
     return;
   }
 
-  const url = CORS_PROXY + sourceUrlToPuzzleUrl[sourceUrl];
+  const url = sourceUrlToPuzzleUrl[sourceUrl] + id;
   let workerPayload = {
     'cmd': 'initBoard',
     'source': sourceUrl,
     'id': id,
   };
+
+  let puzzleUrl = (sourceUrl == WEBPBN_SOURCE_URL) ? WEBPBN_SOURCE_URL + "/" + id: url;
+
   $.get({
-    url: url + id,
+    url: CORS_PROXY + url,
     success: function(data, status) {
       workerPayload.content = data;
+      workerPayload.url = puzzleUrl;
       worker.postMessage(workerPayload);
     },
     //headers: {"X-Requested-With": "foo"},
@@ -83,9 +90,10 @@ function initPuzzle(sourceUrl, id) {
         const fixedUrl = url.replace("nonograms2", "nonograms");
         console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
         $.get({
-          url: fixedUrl + id,
+          url: CORS_PROXY + fixedUrl,
           success: function(data, status) {
             workerPayload.content = data;
+            workerPayload.url = fixedUrl;
             worker.postMessage(workerPayload);
           },
           //headers: {"X-Requested-With": "foo"},

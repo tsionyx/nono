@@ -71,6 +71,7 @@ function response(e) {
       board_with_content(sourceId, id, data.content);
       self.postMessage({
         'result': 'initBoard',
+        'url': data.url,
         'source': sourceUrl,
         'id': id,
       });
