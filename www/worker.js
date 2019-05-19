@@ -2,6 +2,7 @@ importScripts('nono.js');
 const {
   solve,
   board_with_content,
+  white_color_code,
   Source,
   WasmRenderer
 } = wasm_bindgen;
@@ -53,6 +54,7 @@ function collectDataForCellsRender(source, id) {
   result.rows_number = desc.rows_number();
   result.cols_number = desc.cols_number();
   result.cells_as_colors = desc.cells_as_colors();
+  result.white_color_code = white_color_code();
 
   return result;
 }

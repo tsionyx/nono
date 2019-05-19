@@ -107,7 +107,6 @@ function initPuzzle(sourceUrl, id) {
 const CELL_SIZE = 20; // px
 const GRID_COLOR = "#000000";
 const BLANK_COLOR = "#FFFFFF";
-const WHITE_COLOR_CODE = -1;
 
 function renderBlock(ctx, value, intColor, x, y) {
   const verticalOffset = CELL_SIZE * 0.8;
@@ -197,6 +196,7 @@ function renderPuzzleCells(desc) {
   const cells = desc.cells_as_colors;
   const whiteDotSize = CELL_SIZE / 10;
   const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
+  const white_color_code = desc.white_color_code;
 
   const canvas = document.getElementById("nonoCanvas");
   const ctx = canvas.getContext('2d');
@@ -219,7 +219,7 @@ function renderPuzzleCells(desc) {
           CELL_SIZE,
           CELL_SIZE
         );
-      } else if (intColor == WHITE_COLOR_CODE) {
+      } else if (intColor == white_color_code) {
         ctx.fillStyle = "black";
         // ctx.arc(
         //     x * (CELL_SIZE + 1) + 1 + CELL_SIZE / 2,
