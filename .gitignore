@@ -3,6 +3,7 @@
 bin/
 pkg/
 wasm-pack.log
+.cargo-ok
 
 # IDEA
 /.idea/workspace.xml
