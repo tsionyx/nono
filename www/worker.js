@@ -13,7 +13,7 @@ async function init() {
 }
 
 const sourceUrlToName = {
-  'http://webpbn.com': Source.WebPbnCom,
+  'https://webpbn.com': Source.WebPbnCom,
   'http://nonograms.org': Source.NonogramsOrg,
 };
 

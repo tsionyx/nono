@@ -53,7 +53,7 @@ function workerCallback(e) {
 
 
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
-const WEBPBN_SOURCE_URL = "http://webpbn.com";
+const WEBPBN_SOURCE_URL = "https://webpbn.com";
 const NONOGRAMS_SOURCE_URL = "http://nonograms.org";
 
 let sourceUrlToPuzzleUrl = new Object;
