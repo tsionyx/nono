@@ -60,6 +60,19 @@ let sourceUrlToPuzzleUrl = new Object;
 sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/XMLpuz.cgi?id=";
 sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + "/nonograms2/i/";
 
+function successCallback(sourceUrl, id, puzzleUrl) {
+  let workerPayload = {
+    'cmd': 'initBoard',
+    'source': sourceUrl,
+    'id': id,
+  };
+
+  return function(data, status) {
+    workerPayload.content = data;
+    workerPayload.url = puzzleUrl;
+    worker.postMessage(workerPayload);
+  };
+}
 
 function initPuzzle(sourceUrl, id) {
   if (!id) {
@@ -68,21 +81,11 @@ function initPuzzle(sourceUrl, id) {
   }
 
   const url = sourceUrlToPuzzleUrl[sourceUrl] + id;
-  let workerPayload = {
-    'cmd': 'initBoard',
-    'source': sourceUrl,
-    'id': id,
-  };
-
   let puzzleUrl = (sourceUrl == WEBPBN_SOURCE_URL) ? WEBPBN_SOURCE_URL + "/" + id: url;
 
   $.get({
     url: CORS_PROXY + url,
-    success: function(data, status) {
-      workerPayload.content = data;
-      workerPayload.url = puzzleUrl;
-      worker.postMessage(workerPayload);
-    },
+    success: successCallback(sourceUrl, id, puzzleUrl),
     //headers: {"X-Requested-With": "foo"},
     dataType: 'html',
     error: function(xhr, status, error) {
@@ -91,12 +94,7 @@ function initPuzzle(sourceUrl, id) {
         console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
         $.get({
           url: CORS_PROXY + fixedUrl,
-          success: function(data, status) {
-            workerPayload.content = data;
-            workerPayload.url = fixedUrl;
-            worker.postMessage(workerPayload);
-          },
-          //headers: {"X-Requested-With": "foo"},
+          success: successCallback(sourceUrl, id, fixedUrl),
           dataType: 'html',
         });
       }
