@@ -1,11 +1,6 @@
-mod board;
-mod utils;
-
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::Mutex;
-
-use board::WasmRenderer;
 
 use nonogrid::{
     block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
@@ -19,9 +14,13 @@ use nonogrid::{
     },
     utils::rc::MutRc,
 };
-
-use lazy_static::lazy_static;
 use wasm_bindgen::prelude::*;
+
+use board::WasmRenderer;
+use lazy_static::lazy_static;
+
+mod board;
+mod utils;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -96,8 +95,8 @@ where
 
 #[wasm_bindgen]
 pub fn solve(source: Source, id: u16) {
-    let board_wpapped = &BOARDS.lock().unwrap()[&(source, id)];
-    match board_wpapped {
+    let board_wrapped = &BOARDS.lock().unwrap()[&(source, id)];
+    match board_wrapped {
         VarBoard::BlackAndWhite(board) => solve_and_render(board),
         VarBoard::MultiColor(board) => solve_and_render(board),
     }

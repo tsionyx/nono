@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 use nonogrid::{
@@ -9,9 +10,6 @@ use nonogrid::{
     board::Board,
     utils::rc::{MutRc, ReadRc},
 };
-
-use std::cell::RefCell;
-
 use wasm_bindgen::prelude::*;
 
 struct BoardWrapper<B>
