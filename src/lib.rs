@@ -10,7 +10,7 @@ use board::WasmRenderer;
 use nonogrid::{
     block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
     board::Board,
-    parser::{BoardParser, NonogramsOrg, PuzzleScheme, WebPbn},
+    parser::{BoardParser, DetectedParser, PuzzleScheme},
     //render::{Renderer, ShellRenderer},
     solver::{
         self,
@@ -45,7 +45,8 @@ lazy_static! {
     static ref BOARDS: Mutex<HashMap<(Source, u16), VarBoard>> = Mutex::new(HashMap::new());
 }
 
-fn init_board<P: BoardParser>(source: Source, id: u16, content: String) {
+#[wasm_bindgen]
+pub fn board_with_content(source: Source, id: u16, content: String) {
     utils::set_panic_hook();
 
     let id = (source, id);
@@ -55,7 +56,7 @@ fn init_board<P: BoardParser>(source: Source, id: u16, content: String) {
         return;
     }
 
-    let parser = P::with_content(content).unwrap();
+    let parser = DetectedParser::with_content(content).unwrap();
     match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
             let board = parser.parse();
@@ -91,14 +92,6 @@ where
         .unwrap();
 
     //ShellRenderer::with_board(MutRc::clone(&board)).render()
-}
-
-#[wasm_bindgen]
-pub fn board_with_content(source: Source, id: u16, content: String) {
-    match source {
-        Source::WebPbnCom => init_board::<WebPbn>(source, id, content),
-        Source::NonogramsOrg => init_board::<NonogramsOrg>(source, id, content),
-    }
 }
 
 #[wasm_bindgen]
