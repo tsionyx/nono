@@ -53,13 +53,26 @@ function workerCallback(e) {
 
 
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/"
-const WEBPBN_SOURCE_URL = "http://webpbn.com";
+const WEBPBN_SOURCE_URL = "https://webpbn.com";
 const NONOGRAMS_SOURCE_URL = "http://nonograms.org";
 
 let sourceUrlToPuzzleUrl = new Object;
-sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/XMLpuz.cgi?id=";
+sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/export.cgi";
 sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + "/nonograms2/i/";
 
+function successCallback(sourceUrl, id, puzzleUrl) {
+  let workerPayload = {
+    'cmd': 'initBoard',
+    'source': sourceUrl,
+    'id': id,
+  };
+
+  return function(data, status) {
+    workerPayload.content = data;
+    workerPayload.url = puzzleUrl;
+    worker.postMessage(workerPayload);
+  };
+}
 
 function initPuzzle(sourceUrl, id) {
   if (!id) {
@@ -67,41 +80,42 @@ function initPuzzle(sourceUrl, id) {
     return;
   }
 
-  const url = sourceUrlToPuzzleUrl[sourceUrl] + id;
-  let workerPayload = {
-    'cmd': 'initBoard',
-    'source': sourceUrl,
-    'id': id,
-  };
+  let url = sourceUrlToPuzzleUrl[sourceUrl];
 
-  let puzzleUrl = (sourceUrl == WEBPBN_SOURCE_URL) ? WEBPBN_SOURCE_URL + "/" + id: url;
-
-  $.get({
-    url: CORS_PROXY + url,
-    success: function(data, status) {
-      workerPayload.content = data;
-      workerPayload.url = puzzleUrl;
-      worker.postMessage(workerPayload);
-    },
-    //headers: {"X-Requested-With": "foo"},
-    dataType: 'html',
-    error: function(xhr, status, error) {
-      if ((sourceUrl == NONOGRAMS_SOURCE_URL) && (xhr.status == 404)) {
-        const fixedUrl = url.replace("nonograms2", "nonograms");
-        console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
-        $.get({
-          url: CORS_PROXY + fixedUrl,
-          success: function(data, status) {
-            workerPayload.content = data;
-            workerPayload.url = fixedUrl;
-            worker.postMessage(workerPayload);
-          },
-          //headers: {"X-Requested-With": "foo"},
-          dataType: 'html',
-        });
-      }
-    },
-  });
+  let puzzleUrl;
+  if (sourceUrl == WEBPBN_SOURCE_URL) {
+    puzzleUrl = sourceUrl + "/" + id;
+    $.post({
+      url: CORS_PROXY + url,
+      data: {
+        id: id,
+        fmt: "olsak",
+        go: 1
+      },
+      success: successCallback(sourceUrl, id, puzzleUrl),
+      //headers: {"X-Requested-With": "foo"},
+    });
+  } else {
+    url = url + id;
+    puzzleUrl = url;
+    $.get({
+      url: CORS_PROXY + url,
+      success: successCallback(sourceUrl, id, puzzleUrl),
+      //headers: {"X-Requested-With": "foo"},
+      dataType: 'html',
+      error: function(xhr, status, error) {
+        if (xhr.status == 404) {
+          const fixedUrl = url.replace("nonograms2", "nonograms");
+          console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
+          $.get({
+            url: CORS_PROXY + fixedUrl,
+            success: successCallback(sourceUrl, id, fixedUrl),
+            dataType: 'html',
+          });
+        }
+      },
+    });
+  }
 }
 
 const CELL_SIZE = 20; // px
