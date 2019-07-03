@@ -23,10 +23,8 @@ function workerCallback(e) {
         'source': source,
         'id': id,
       });
-      $("#timeToSolve").text("Solving puzzle #" + id + " from " + source + "...");
-
-      $("#originalUrl").empty();
-      $("#originalUrl").append($("<a href=" + data.url + ">Original puzzle URL</a>"));
+      document.getElementById("timeToSolve").innerHTML = "Solving puzzle #" + id + " from " + source + "...";
+      document.getElementById("originalUrl").innerHTML = "<a href=" + data.url + ">Original puzzle URL</a>";
       break;
 
     case 'renderDescriptions':
@@ -38,7 +36,8 @@ function workerCallback(e) {
       break;
 
     case 'solvePuzzle':
-      $("#timeToSolve").text("Time to solve the puzzle #" + id + " from " + source + ": " + +data.time.toFixed(2) + "ms");
+      const msg = "Time to solve the puzzle #" + id + " from " + source + ": " + +data.time.toFixed(2) + "ms";
+      document.getElementById("timeToSolve").innerHTML = msg;
       worker.postMessage({
         'cmd': 'renderCells',
         'source': source,
@@ -67,7 +66,8 @@ function successCallback(sourceUrl, id, puzzleUrl) {
     'id': id,
   };
 
-  return function(data, status) {
+  return function(xhttp) {
+    var data = xhttp.responseText;
     workerPayload.content = data;
     workerPayload.url = puzzleUrl;
     worker.postMessage(workerPayload);
@@ -80,41 +80,28 @@ function initPuzzle(sourceUrl, id) {
     return;
   }
 
+  document.getElementById("timeToSolve").innerHTML = "Retreiving puzzle #" + id + " from " + sourceUrl + "...";
   let url = sourceUrlToPuzzleUrl[sourceUrl];
 
   let puzzleUrl;
   if (sourceUrl == WEBPBN_SOURCE_URL) {
     puzzleUrl = sourceUrl + "/" + id;
-    $.post({
-      url: CORS_PROXY + url,
-      data: {
-        id: id,
-        fmt: "olsak",
-        go: 1
-      },
-      success: successCallback(sourceUrl, id, puzzleUrl),
-      //headers: {"X-Requested-With": "foo"},
-    });
+    doPost(CORS_PROXY + url,
+      'fmt=olsak&go=1&id=' + id,
+      successCallback(sourceUrl, id, puzzleUrl));
   } else {
     url = url + id;
     puzzleUrl = url;
-    $.get({
-      url: CORS_PROXY + url,
-      success: successCallback(sourceUrl, id, puzzleUrl),
-      //headers: {"X-Requested-With": "foo"},
-      dataType: 'html',
-      error: function(xhr, status, error) {
-        if (xhr.status == 404) {
+    doGet(CORS_PROXY + url,
+      successCallback(sourceUrl, id, puzzleUrl),
+      function(xhttp) {
+        if (xhttp.status == 404) {
           const fixedUrl = url.replace("nonograms2", "nonograms");
           console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
-          $.get({
-            url: CORS_PROXY + fixedUrl,
-            success: successCallback(sourceUrl, id, fixedUrl),
-            dataType: 'html',
-          });
+          doGet(CORS_PROXY + fixedUrl,
+            successCallback(sourceUrl, id, fixedUrl));
         }
-      },
-    });
+      });
   }
 }
 
@@ -319,7 +306,36 @@ function submitEnterForInput(textbox, button) {
   });
 }
 
+function doGet(url, callback, error_callback) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      if (Math.floor(this.status / 100) == 2) {
+        callback(this);
+      } else {
+        error_callback(this);
+      }
+    }
+  };
+  xhttp.open("GET", url, true);
+  xhttp.send(null);
+}
 
+function doPost(url, body, callback, error_callback) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4) {
+      if (Math.floor(this.status / 100) == 2) {
+        callback(this);
+      } else {
+        error_callback(this);
+      }
+    }
+  };
+  xhttp.open("POST", url, true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send(body);
+}
 
 function initPage() {
   setInputFilter(document.getElementById("puzzleId"), function(value) {
@@ -328,9 +344,10 @@ function initPage() {
 
   submitEnterForInput(document.getElementById("puzzleId"), document.getElementById("get"));
 
-  $("#get").on("click", function() {
-    const sourceUrl = $('input[name=source]:checked').val();
-    initPuzzle(sourceUrl, parseInt($("#puzzleId").val()));
+  document.getElementById("get").addEventListener("click", function() {
+    const sourceUrl = document.querySelector('input[name=source]:checked').value;
+    const puzzleId = document.getElementById("puzzleId").value;
+    initPuzzle(sourceUrl, parseInt(puzzleId));
   });
 
   worker.addEventListener('message', workerCallback, false);
@@ -338,11 +355,11 @@ function initPage() {
   const puzzleId = parseInt(document.location.search.split('id=')[1]);
   if (puzzleId) {
     //console.log(puzzleId);
-    $("#puzzleId").val(puzzleId);
+    document.getElementById("puzzleId").value = puzzleId;
   }
-  $("#get").trigger("click");
+  document.getElementById("get").click();
 }
 
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", function(event) {
   initPage();
 });
