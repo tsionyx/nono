@@ -82,23 +82,28 @@ pub fn board_with_content(source: Source, id: u16, content: String) {
     //thread::spawn(move || solve(id, multi_color));
 }
 
-fn solve_and_render<B>(board: &MutRc<Board<B>>)
+fn solve_and_render<B>(board: &MutRc<Board<B>>, max_solutions: usize)
 where
     B: Block + Display,
     B::Color: DynamicColor + Display,
 {
-    solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(MutRc::clone(&board), Some(2), None, None)
-        .unwrap();
+    solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(
+        MutRc::clone(&board),
+        Some(max_solutions),
+        None,
+        None,
+    )
+    .unwrap();
 
     //ShellRenderer::with_board(MutRc::clone(&board)).render()
 }
 
 #[wasm_bindgen]
-pub fn solve(source: Source, id: u16) {
+pub fn solve(source: Source, id: u16, max_solutions: usize) {
     let board_wrapped = &BOARDS.lock().unwrap()[&(source, id)];
     match board_wrapped {
-        VarBoard::BlackAndWhite(board) => solve_and_render(board),
-        VarBoard::MultiColor(board) => solve_and_render(board),
+        VarBoard::BlackAndWhite(board) => solve_and_render(board, max_solutions),
+        VarBoard::MultiColor(board) => solve_and_render(board, max_solutions),
     }
 }
 
