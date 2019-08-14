@@ -115,6 +115,17 @@ const CELL_SIZE = 20; // px
 const GRID_COLOR = "#000000";
 const BLANK_COLOR = "#FFFFFF";
 
+const ALMOST_ZERO = 5;
+
+function closeToBlack(intColor) {
+  let r = intColor >> 16;
+  let gb = intColor % (1 << 16);
+  let g = gb >> 8;
+  let b = gb % (1 << 8);
+
+  return ((r <= ALMOST_ZERO) && (g <= ALMOST_ZERO) && (b <= ALMOST_ZERO));
+}
+
 function renderBlock(ctx, value, intColor, x, y) {
   const verticalOffset = CELL_SIZE * 0.8;
   const horizontalOffset = CELL_SIZE * 0.15;
@@ -133,7 +144,7 @@ function renderBlock(ctx, value, intColor, x, y) {
   );
 
   let textColor = "black";
-  if (blockColor === "#000000") {
+  if (closeToBlack(intColor)) {
     textColor = "white";
   }
   ctx.fillStyle = textColor;
