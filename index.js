@@ -18,11 +18,17 @@ function workerCallback(e) {
         'source': source,
         'id': id,
       });
-      worker.postMessage({
+
+      let solveMsg = {
         'cmd': 'solvePuzzle',
         'source': source,
         'id': id,
-      });
+      };
+      const maxSolutions = intValFromQuery('solutions');
+      if (maxSolutions !== undefined) {
+        solveMsg.maxSolutions = maxSolutions;
+      }
+      worker.postMessage(solveMsg);
       document.getElementById("timeToSolve").innerHTML = "Solving puzzle #" + id + " from " + source + "...";
       document.getElementById("originalUrl").innerHTML = "<a href=" + data.url + ">Original puzzle URL</a>";
       break;
@@ -337,6 +343,14 @@ function doPost(url, body, callback, error_callback) {
   xhttp.send(body);
 }
 
+function intValFromQuery(arg) {
+    const val = document.location.search.split(arg + '=');
+    if (val.length < 2) {
+        return undefined;
+    }
+    return parseInt(val[1]);
+}
+
 function initPage() {
   setInputFilter(document.getElementById("puzzleId"), function(value) {
     return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 40000);
@@ -352,7 +366,7 @@ function initPage() {
 
   worker.addEventListener('message', workerCallback, false);
 
-  const puzzleId = parseInt(document.location.search.split('id=')[1]);
+  const puzzleId = intValFromQuery('id');
   if (puzzleId) {
     //console.log(puzzleId);
     document.getElementById("puzzleId").value = puzzleId;

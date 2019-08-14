@@ -97,9 +97,12 @@ function response(e) {
 
     case 'solvePuzzle':
       console.log("Worker starting to solve puzzle #" + id + " from source " + sourceUrl);
+      // try to find 2 solutions to check out if the puzzle has multiple solutions
+      const maxSolutions = data.hasOwnProperty('maxSolutions') ? data.maxSolutions : 2;
+
       console.time("solve puzzle #" + id);
       const t0 = performance.now();
-      solve(sourceId, id);
+      solve(sourceId, id, maxSolutions);
       const t1 = performance.now();
       console.timeEnd("solve puzzle #" + id);
 
