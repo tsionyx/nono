@@ -87,15 +87,16 @@ where
     B: Block + Display,
     B::Color: DynamicColor + Display,
 {
-    solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(
+    let solutions = solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(
         MutRc::clone(&board),
         Some(max_solutions),
-        None,
-        None,
     )
     .unwrap();
 
-    //ShellRenderer::with_board(MutRc::clone(&board)).render()
+    if let Some(mut solutions) = solutions {
+        let first_solution = solutions.next().unwrap();
+        Board::restore_with_callback(MutRc::clone(&board), first_solution);
+    }
 }
 
 #[wasm_bindgen]
