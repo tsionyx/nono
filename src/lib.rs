@@ -87,15 +87,13 @@ where
     B: Block + Display,
     B::Color: DynamicColor + Display,
 {
-    let solutions = solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(
-        MutRc::clone(&board),
-        Some(max_solutions),
-    )
-    .unwrap();
+    let solutions =
+        solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(MutRc::clone(board), Some(max_solutions))
+            .unwrap();
 
     if let Some(mut solutions) = solutions {
         let first_solution = solutions.next().unwrap();
-        Board::restore_with_callback(MutRc::clone(&board), first_solution);
+        Board::restore_with_callback(MutRc::clone(board), first_solution);
     }
 }
 

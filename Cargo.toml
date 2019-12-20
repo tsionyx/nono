@@ -1,11 +1,14 @@
 [package]
 name = "nono"
-description = "Efficient nonogram solver"
+description = "Efficient nonogram solver right in your browser"
 license = "MIT"
 repository = "https://github.com/tsionyx/nono"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Ivan Ladelshchikov <tsionyx@gmail.com>"]
 edition = "2018"
+readme = "README.md"
+keywords = ["nonogram", "solver", "wasm"]
+categories = ["games", "visualization"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

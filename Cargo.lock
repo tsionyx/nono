@@ -228,11 +228,11 @@ dependencies = [
 
 [[package]]
 name = "nono"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "console_error_panic_hook 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nonogrid 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nonogrid 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.55 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen-test 0.2.50 (registry+https://github.com/rust-lang/crates.io-index)",
  "wee_alloc 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -240,7 +240,7 @@ dependencies = [
 
 [[package]]
 name = "nonogrid"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "hashbrown 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -767,7 +767,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "88579771288728879b57485cc7d6b07d648c9f0141eb955f8ab7f9d45394468e"
 "checksum memory_units 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 "checksum nom 4.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2ad2a91a8e869eeb30b9cb3119ae87773a8f4ae617f41b1eb9c154b2905f7bd6"
-"checksum nonogrid 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cc3f053e81336b741e5aa9767eb502f2d0312449eefa0eef44621e695ae3496a"
+"checksum nonogrid 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2e5255eb3bca45ee2c55c11bcc5708e5ff0852cd1014b33db3041970f11418bb"
 "checksum num-traits 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)" = "443c53b3c3531dfcbfa499d8893944db78474ad7a1d87fa2d94d1a2231693ac6"
 "checksum ordered-float 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "18869315e81473c951eb56ad5558bbc56978562d3ecfb87abb7a1e944cea4518"
 "checksum partial_ref 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b2b85fa89a02abf59d36821c373b5ed38c8e075505f1a08618b000fce81229bc"
