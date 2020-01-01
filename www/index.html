@@ -12,8 +12,27 @@
       width: 100%; //height: 100%;
       display: flex;
       flex-direction: column;
+    }
+
+    #mainArea {
+      display: flex;
       align-items: center;
-      justify-content: center;
+    }
+
+    #srcArea {
+      display: flex;
+      align-items: center;
+    }
+
+    #nonoSrc {
+      height: 200px;
+      width: 100%;
+    }
+
+    #imageArea,#srcArea {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     #nonoCanvas {
@@ -28,17 +47,29 @@
 </head>
 
 <body>
-  <div>
-    <input id="puzzleId" placeholder="Enter ID of the puzzle here" type="text">
-    <input checked name="source" type="radio" value="https://webpbn.com"><a href="https://webpbn.com">https://webpbn.com</a>
-    <input name="source" type="radio" value="http://nonograms.org"><a href="http://nonograms.org">http://nonograms.org</a>
+  <div id="mainArea">
+    <div id="srcArea">
+      <details>
+        <summary>Load from <a href="https://webpbn.com">Web Paint-by-Number</a></summary>
+        <input type="number" id="webpbnCounter" name="https://webpbn.com" min="1" max="35000">
+      </details>
+      <details>
+        <summary>Load from <a href="http://nonograms.org">Nonograms.org</a></summary>
+        <input type="number" id="nonogramsOrgCounter" name="http://nonograms.org" min="1" max="30000">
+      </details>
+
+      <textarea id="nonoSrc"></textarea>
+      <div id="originalUrl"></div>
+    </div>
+
+    <button id="solve">Solve!</button>
+
+    <div id="imageArea">
+      <canvas id="nonoCanvas"></canvas>
+      <span id="timeToSolve"></span>
+    </div>
   </div>
-  <div>
-    <button id="get">Solve!</button>
-    <span id="timeToSolve"></span>
-  </div>
-  <canvas id="nonoCanvas"></canvas>
-  <div id="originalUrl"></div>
+
 
   <script src="./index.js"></script>
 </body>

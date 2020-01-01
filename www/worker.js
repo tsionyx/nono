@@ -3,7 +3,6 @@ const {
   init_board,
   solve,
   white_color_code,
-  Source,
   WasmRenderer
 } = wasm_bindgen;
 
@@ -12,16 +11,11 @@ async function init() {
   self.addEventListener('message', response, false);
 }
 
-const sourceUrlToName = {
-  'https://webpbn.com': Source.WebPbnCom,
-  'http://nonograms.org': Source.NonogramsOrg,
-};
-
-function collectDataForDescriptionsRender(source, id) {
-  console.log("Worker collecting descriptions for puzzle #" + id);
+function collectDataForDescriptionsRender(hash) {
+  console.log("Worker collecting descriptions for puzzle #" + hash);
 
   let result = {}
-  const desc = WasmRenderer.for_board(source, id);
+  const desc = WasmRenderer.for_board(hash);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows = [];
@@ -44,11 +38,11 @@ function collectDataForDescriptionsRender(source, id) {
 }
 
 
-function collectDataForCellsRender(source, id) {
-  console.log("Worker collecting cells for puzzle #" + id);
+function collectDataForCellsRender(hash) {
+  console.log("Worker collecting cells for puzzle #" + hash);
 
   let result = {}
-  const desc = WasmRenderer.for_board(source, id);
+  const desc = WasmRenderer.for_board(hash);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows_number = desc.rows_number();
@@ -62,25 +56,18 @@ function collectDataForCellsRender(source, id) {
 function response(e) {
   var data = e.data;
 
-  const cmd = data.cmd;
-  const id = data.id;
-  const sourceUrl = data.source;
-  const sourceId = sourceUrlToName[sourceUrl];
-
-  switch (cmd) {
+  switch (data.cmd) {
     case 'initBoard':
-      console.log("Worker initializing puzzle #" + id + " from source " + sourceUrl);
-      init_board(sourceId, id, data.content);
+      const hash_id = init_board(data.content);
+      console.log("Worker initialized puzzle with hash " + hash_id);
       self.postMessage({
         'result': 'initBoard',
-        'url': data.url,
-        'source': sourceUrl,
-        'id': id,
+        'hash': hash_id,
       });
       break;
 
     case 'renderDescriptions':
-      const objDesc = collectDataForDescriptionsRender(sourceId, id);
+      const objDesc = collectDataForDescriptionsRender(data.hash);
       self.postMessage({
         'result': 'renderDescriptions',
         'obj': objDesc
@@ -88,7 +75,7 @@ function response(e) {
       break;
 
     case 'renderCells':
-      const objCells = collectDataForCellsRender(sourceId, id);
+      const objCells = collectDataForCellsRender(data.hash);
       self.postMessage({
         'result': 'renderCells',
         'obj': objCells
@@ -96,27 +83,27 @@ function response(e) {
       break;
 
     case 'solvePuzzle':
-      console.log("Worker starting to solve puzzle #" + id + " from source " + sourceUrl);
+      const hash = data.hash;
+      console.log("Worker starting to solve puzzle #" + hash);
       // try to find 2 solutions to check out if the puzzle has multiple solutions
       const maxSolutions = data.hasOwnProperty('maxSolutions') ? data.maxSolutions : 2;
 
-      console.time("solve puzzle #" + id);
+      console.time("solve puzzle #" + hash);
       const t0 = performance.now();
-      solve(sourceId, id, maxSolutions);
+      solve(hash, maxSolutions);
       const t1 = performance.now();
-      console.timeEnd("solve puzzle #" + id);
+      console.timeEnd("solve puzzle #" + hash);
 
       self.postMessage({
         'result': 'solvePuzzle',
         'time': t1 - t0,
-        'source': sourceUrl,
-        'id': id
+        'hash': hash,
       });
       break;
 
     default:
       self.postMessage({
-        'error': 'Unknown command: ' + cmd
+        'error': 'Unknown command: ' + data.cmd
       });
   };
 }

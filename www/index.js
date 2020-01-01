@@ -8,29 +8,25 @@ function workerCallback(e) {
     console.error(data.error);
   }
 
-  const id = data.id;
-  const source = data.source;
+  const hash = data.hash;
 
   switch (data.result) {
     case 'initBoard':
       worker.postMessage({
         'cmd': 'renderDescriptions',
-        'source': source,
-        'id': id,
+        'hash': hash,
       });
 
       let solveMsg = {
         'cmd': 'solvePuzzle',
-        'source': source,
-        'id': id,
+        'hash': hash,
       };
       const maxSolutions = intValFromQuery('solutions');
       if (maxSolutions !== undefined) {
         solveMsg.maxSolutions = maxSolutions;
       }
       worker.postMessage(solveMsg);
-      document.getElementById("timeToSolve").innerHTML = "Solving puzzle #" + id + " from " + source + "...";
-      document.getElementById("originalUrl").innerHTML = "<a href=" + data.url + ">Original puzzle URL</a>";
+      document.querySelector("#timeToSolve").innerHTML = "Solving puzzle with hash " + hash + "...";
       break;
 
     case 'renderDescriptions':
@@ -42,12 +38,11 @@ function workerCallback(e) {
       break;
 
     case 'solvePuzzle':
-      const msg = "Time to solve the puzzle #" + id + " from " + source + ": " + +data.time.toFixed(2) + "ms";
-      document.getElementById("timeToSolve").innerHTML = msg;
+      const msg = "Time to solve the puzzle with hash " + hash + ": " + +data.time.toFixed(2) + "ms";
+      document.querySelector("#timeToSolve").innerHTML = msg;
       worker.postMessage({
         'cmd': 'renderCells',
-        'source': source,
-        'id': id,
+        'hash': hash,
       });
       break;
 
@@ -65,18 +60,33 @@ let sourceUrlToPuzzleUrl = new Object;
 sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + "/export.cgi";
 sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + "/nonograms2/i/";
 
-function successCallback(sourceUrl, id, puzzleUrl) {
-  let workerPayload = {
-    'cmd': 'initBoard',
-    'source': sourceUrl,
-    'id': id,
-  };
+const NONOGRAMS_ENCODED_SRC_RE = /var d=(\[[\[\]\d, ]+\]);/gm;
 
+function successCallback(sourceUrl, puzzleUrl) {
   return function(xhttp) {
     var data = xhttp.responseText;
-    workerPayload.content = data;
-    workerPayload.url = puzzleUrl;
-    worker.postMessage(workerPayload);
+    let src = data;
+    if (sourceUrl == NONOGRAMS_SOURCE_URL) {
+      while ((match = NONOGRAMS_ENCODED_SRC_RE.exec(data)) !== null) {
+        src = match[0];
+      }
+    }
+    document.querySelector("#nonoSrc").value = src;
+    document.querySelector("#originalUrl").innerHTML = "<a href=" + puzzleUrl + ">Original puzzle URL</a>";
+    //clearCanvas();
+  };
+}
+
+function clearCanvas() {
+  const canvas = document.querySelector("#nonoCanvas");
+  var context = canvas.getContext('2d');
+  context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function failCallback(msg) {
+  return function(xhttp) {
+    document.querySelector("#originalUrl").innerHTML = "Failed to get " + msg + ".";
+    console.error(xhttp);
   };
 }
 
@@ -86,26 +96,31 @@ function initPuzzle(sourceUrl, id) {
     return;
   }
 
-  document.getElementById("timeToSolve").innerHTML = "Retreiving puzzle #" + id + " from " + sourceUrl + "...";
+  const msg = "puzzle #" + id + " from " + sourceUrl;
+  document.querySelector("#originalUrl").innerHTML = "Retreiving " + msg + "...";
   let url = sourceUrlToPuzzleUrl[sourceUrl];
 
   let puzzleUrl;
   if (sourceUrl == WEBPBN_SOURCE_URL) {
-    puzzleUrl = sourceUrl + "/" + id;
+    puzzleUrl = sourceUrl + "/?id=" + id;
     doPost(CORS_PROXY + url,
       'fmt=olsak&go=1&id=' + id,
-      successCallback(sourceUrl, id, puzzleUrl));
+      successCallback(sourceUrl, puzzleUrl),
+      failCallback(msg));
   } else {
     url = url + id;
     puzzleUrl = url;
     doGet(CORS_PROXY + url,
-      successCallback(sourceUrl, id, puzzleUrl),
+      successCallback(sourceUrl, puzzleUrl),
       function(xhttp) {
         if (xhttp.status == 404) {
           const fixedUrl = url.replace("nonograms2", "nonograms");
           console.log("Try to find the puzzle #" + id + " on another URL: " + fixedUrl);
           doGet(CORS_PROXY + fixedUrl,
-            successCallback(sourceUrl, id, fixedUrl));
+            successCallback(sourceUrl, fixedUrl),
+            failCallback(msg));
+        } else {
+          failCallback(msg)(xhttp);
         }
       });
   }
@@ -148,7 +163,6 @@ function renderBlock(ctx, value, intColor, x, y) {
     textColor = "white";
   }
   ctx.fillStyle = textColor;
-  //console.log(colIndex, rowIndex);
   ctx.fillText(
     value,
     x * (CELL_SIZE + 1) + horizontalOffset,
@@ -160,7 +174,7 @@ function renderPuzzleDesc(desc) {
   const height = desc.full_height;
   const width = desc.full_width;
 
-  const canvas = document.getElementById("nonoCanvas");
+  const canvas = document.querySelector("#nonoCanvas");
   canvas.height = (CELL_SIZE + 1) * height + 3;
   canvas.width = (CELL_SIZE + 1) * width + 3;
 
@@ -216,7 +230,7 @@ function renderPuzzleCells(desc) {
   const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
   const white_color_code = desc.white_color_code;
 
-  const canvas = document.getElementById("nonoCanvas");
+  const canvas = document.querySelector("#nonoCanvas");
   const ctx = canvas.getContext('2d');
   ctx.beginPath();
   for (let i = 0; i < rows_number; i++) {
@@ -293,32 +307,19 @@ function drawGrid(ctx, x_start, y_start, width, height) {
   ctx.stroke();
 }
 
-// https://jsfiddle.net/emkey08/zgvtjc51
-// Restricts input for the given textbox to the given inputFilter.
-function setInputFilter(textbox, inputFilter) {
-  ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
-    textbox.addEventListener(event, function() {
-      if (inputFilter(this.value)) {
-        this.oldValue = this.value;
-        this.oldSelectionStart = this.selectionStart;
-        this.oldSelectionEnd = this.selectionEnd;
-      } else if (this.hasOwnProperty("oldValue")) {
-        this.value = this.oldValue;
-        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
-      }
-    });
-  });
-}
-
-
-function submitEnterForInput(textbox, button) {
-  textbox.addEventListener("keyup", function(event) {
+function loadPuzzleFromInput(input) {
+  input.addEventListener("keypress", function(event) {
     // Number 13 is the "Enter" key on the keyboard
-    if (event.keyCode === 13) {
+    if (event.keyCode === 13 || event.which === 13) {
       // Cancel the default action, if needed
       event.preventDefault();
-      // Trigger the button element with a click
-      button.click();
+
+      const counter = event.target;
+      const value = counter.valueAsNumber;
+      if (value) {
+        const sourceUrl = counter.name;
+        initPuzzle(sourceUrl, parseInt(value));
+      }
     }
   });
 }
@@ -363,26 +364,27 @@ function intValFromQuery(arg) {
 }
 
 function initPage() {
-  setInputFilter(document.getElementById("puzzleId"), function(value) {
-    return /^\d*$/.test(value) && (value === "" || parseInt(value) <= 40000);
-  });
-
-  submitEnterForInput(document.getElementById("puzzleId"), document.getElementById("get"));
-
-  document.getElementById("get").addEventListener("click", function() {
-    const sourceUrl = document.querySelector('input[name=source]:checked').value;
-    const puzzleId = document.getElementById("puzzleId").value;
-    initPuzzle(sourceUrl, parseInt(puzzleId));
-  });
+  loadPuzzleFromInput(document.querySelector("#webpbnCounter"));
+  loadPuzzleFromInput(document.querySelector("#nonogramsOrgCounter"));
 
   worker.addEventListener('message', workerCallback, false);
 
   const puzzleId = intValFromQuery('id');
   if (puzzleId) {
-    //console.log(puzzleId);
-    document.getElementById("puzzleId").value = puzzleId;
+    console.log(puzzleId);
+
+    // TODO: make for other source
+    document.querySelector("#webpbnCounter").value = puzzleId;
+    initPuzzle(WEBPBN_SOURCE_URL, puzzleId);
   }
-  document.getElementById("get").click();
+
+  document.querySelector("#nonoSrc").value = "";
+  document.querySelector("#solve").addEventListener("click", function(event) {
+    worker.postMessage({
+      'cmd': 'initBoard',
+      'content': document.querySelector("#nonoSrc").value
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
