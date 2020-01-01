@@ -22,15 +22,8 @@ where
     color_cache: RefCell<HashMap<ColorId, Option<u32>>>,
 }
 
-const WHITE_COLOR_CODE: i32 = -1;
+pub(super) const WHITE_COLOR_CODE: i32 = -1;
 const UNKNOWN_COLOR_CODE: i32 = -2;
-
-#[allow(dead_code)]
-#[allow(clippy::missing_const_for_fn)]
-#[wasm_bindgen]
-pub fn white_color_code() -> i32 {
-    WHITE_COLOR_CODE
-}
 
 impl<B> BoardWrapper<B>
 where

@@ -86,6 +86,12 @@ impl WasmRenderer {
             VarBoard::MultiColor(board) => Self::with_colored(board),
         }
     }
+
+    #[wasm_bindgen]
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn white_color_code() -> i32 {
+        board::WHITE_COLOR_CODE
+    }
 }
 
 fn solve_and_render<B>(board: &MutRc<Board<B>>, max_solutions: usize)
