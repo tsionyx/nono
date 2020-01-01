@@ -37,7 +37,6 @@ function collectDataForDescriptionsRender(hash) {
   return result;
 }
 
-
 function collectDataForCellsRender(hash) {
   console.log("Worker collecting cells for puzzle #" + hash);
 
