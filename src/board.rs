@@ -89,7 +89,7 @@ where
             .or_insert_with(|| {
                 let color_desc = self.board.read().desc_by_id(color_id)?;
                 let rgb = color_desc.rgb_value();
-                Some(u32::from(rgb.0) * (1 << 16) + u32::from(rgb.1) * (1 << 8) + u32::from(rgb.2))
+                Some((u32::from(rgb.0) << 16) + (u32::from(rgb.1) << 8) + u32::from(rgb.2))
             })
     }
 
@@ -165,13 +165,13 @@ pub struct WasmRenderer {
 }
 
 impl WasmRenderer {
-    pub fn with_binary_board(board: &MutRc<Board<BinaryBlock>>) -> Self {
+    pub fn with_black_and_white(board: &MutRc<Board<BinaryBlock>>) -> Self {
         Self {
             binary: Some(BoardWrapper::from_board(board)),
             colored: None,
         }
     }
-    pub fn with_colored_board(board: &MutRc<Board<ColoredBlock>>) -> Self {
+    pub fn with_colored(board: &MutRc<Board<ColoredBlock>>) -> Self {
         Self {
             binary: None,
             colored: Some(BoardWrapper::from_board(board)),
@@ -179,77 +179,59 @@ impl WasmRenderer {
     }
 }
 
+macro_rules! binary_or_colored {
+    ($self:ident.$method:ident) => {
+        $self.binary
+            .as_ref()
+            .map(BoardWrapper::$method)
+            .or_else(|| $self.colored.as_ref().map(BoardWrapper::$method))
+            .expect("At least one option should be set")
+    };
+
+    ($self:ident.$method:ident $( $arg:expr ),+ $(,)?) => {
+        $self.binary
+            .as_ref()
+            .map(|board| board.$method($($arg,)+))
+            .or_else(|| $self.colored.as_ref().map(|board| board.$method($($arg,)+)))
+            .expect("At least one option should be set")
+    };
+}
+
 #[wasm_bindgen]
 impl WasmRenderer {
     pub fn rows_number(&self) -> usize {
-        self.binary
-            .as_ref()
-            .map(BoardWrapper::rows_number)
-            .or_else(|| self.colored.as_ref().map(BoardWrapper::rows_number))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.rows_number)
     }
 
     pub fn cols_number(&self) -> usize {
-        self.binary
-            .as_ref()
-            .map(BoardWrapper::cols_number)
-            .or_else(|| self.colored.as_ref().map(BoardWrapper::cols_number))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.cols_number)
     }
 
     pub fn full_height(&self) -> usize {
-        self.binary
-            .as_ref()
-            .map(BoardWrapper::full_height)
-            .or_else(|| self.colored.as_ref().map(BoardWrapper::full_height))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.full_height)
     }
 
     pub fn full_width(&self) -> usize {
-        self.binary
-            .as_ref()
-            .map(BoardWrapper::full_width)
-            .or_else(|| self.colored.as_ref().map(BoardWrapper::full_width))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.full_width)
     }
 
     pub fn get_row(&self, i: usize) -> Vec<u16> {
-        self.binary
-            .as_ref()
-            .map(|ds| ds.get_row(i))
-            .or_else(|| self.colored.as_ref().map(|ds| ds.get_row(i)))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.get_row i)
     }
 
     pub fn get_column(&self, i: usize) -> Vec<u16> {
-        self.binary
-            .as_ref()
-            .map(|ds| ds.get_column(i))
-            .or_else(|| self.colored.as_ref().map(|ds| ds.get_column(i)))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.get_column i)
     }
 
     pub fn get_row_colors(&self, i: usize) -> Vec<u32> {
-        self.binary
-            .as_ref()
-            .map(|ds| ds.get_row_colors(i))
-            .or_else(|| self.colored.as_ref().map(|ds| ds.get_row_colors(i)))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.get_row_colors i)
     }
 
     pub fn get_column_colors(&self, i: usize) -> Vec<u32> {
-        self.binary
-            .as_ref()
-            .map(|ds| ds.get_column_colors(i))
-            .or_else(|| self.colored.as_ref().map(|ds| ds.get_column_colors(i)))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.get_column_colors i)
     }
 
     pub fn cells_as_colors(&self) -> Vec<i32> {
-        self.binary
-            .as_ref()
-            .map(BoardWrapper::cells_as_colors)
-            .or_else(|| self.colored.as_ref().map(BoardWrapper::cells_as_colors))
-            .expect("At least one option should be set")
+        binary_or_colored!(self.cells_as_colors)
     }
 }

@@ -1,7 +1,7 @@
 importScripts('nono.js');
 const {
+  init_board,
   solve,
-  board_with_content,
   white_color_code,
   Source,
   WasmRenderer
@@ -21,7 +21,7 @@ function collectDataForDescriptionsRender(source, id) {
   console.log("Worker collecting descriptions for puzzle #" + id);
 
   let result = {}
-  const desc = WasmRenderer.from_board(source, id);
+  const desc = WasmRenderer.for_board(source, id);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows = [];
@@ -48,7 +48,7 @@ function collectDataForCellsRender(source, id) {
   console.log("Worker collecting cells for puzzle #" + id);
 
   let result = {}
-  const desc = WasmRenderer.from_board(source, id);
+  const desc = WasmRenderer.for_board(source, id);
   result.full_height = desc.full_height();
   result.full_width = desc.full_width();
   result.rows_number = desc.rows_number();
@@ -70,7 +70,7 @@ function response(e) {
   switch (cmd) {
     case 'initBoard':
       console.log("Worker initializing puzzle #" + id + " from source " + sourceUrl);
-      board_with_content(sourceId, id, data.content);
+      init_board(sourceId, id, data.content);
       self.postMessage({
         'result': 'initBoard',
         'url': data.url,
