@@ -5,6 +5,12 @@ rust:
   - nightly
 
 sudo: false
+
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
 cache:
   - cargo
   - directories:
@@ -18,18 +24,19 @@ addons:
       - git
 
 before_script:
+  - rustup component add rustfmt
+  - rustup component add clippy
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
   - test -d binaryen/.git || git clone https://github.com/WebAssembly/binaryen.git
-  - pushd binaryen && cmake . && make && popd
+  # the last working version is the 'a0c423ef501' commit
+  - pushd binaryen && git checkout a0c423ef501 && cmake . && make wasm-opt && popd
 
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo fmt -- --check
+  - cargo clippy --verbose --all-targets --all-features --all -- -Dwarnings -W clippy::nursery
+  - cargo test --all-features --verbose --all
   - wasm-pack build --target no-modules --no-typescript
   - ./binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
-
-matrix:
-  fast_finish: true
 
 before_deploy:
   - cp www/*.html www/{index,worker}.js pkg/
