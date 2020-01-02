@@ -6,29 +6,48 @@ var worker = new Worker('worker.js');
 worker.addEventListener('message', workerCallback, false);
 
 function initPage() {
-  loadPuzzleFromInput(document.querySelector("#webpbnCounter"));
-  loadPuzzleFromInput(document.querySelector("#nonogramsOrgCounter"));
+  const $webpbnCounter = document.querySelector("#webpbnCounter");
+  const $nonogramsOrgCounter = document.querySelector("#nonogramsOrgCounter");
+  const $nonoSrcInput = document.querySelector("#nonoSrc");
+  const $solveButton = document.querySelector("#solve");
 
-  document.querySelector("#nonoSrc").value = "";
+  setKeyHandlerForLoading($webpbnCounter);
+  setKeyHandlerForLoading($nonogramsOrgCounter);
+
+  $nonoSrcInput.value = "";
   initFromArgs();
 
-  document.querySelector("#solve").addEventListener("click", function(event) {
+  $solveButton.addEventListener("click", function(event) {
     worker.postMessage({
       'cmd': 'initBoard',
-      'content': document.querySelector("#nonoSrc").value
+      'content': $nonoSrcInput.value
     });
   });
 
   document.querySelector("#share").addEventListener("click", function(event) {
-    const content = document.querySelector("#nonoSrc").value;
+    const content = $nonoSrcInput.value;
     if (content) {
       const encoded = encodeURIComponent(content);
       history.pushState(null, document.title, '?s=' + encoded);
     }
   });
+
+  document.querySelector("#webpbnButton").addEventListener("click", function(event) {
+    loadPuzzle(WEBPBN_SOURCE_URL, parseInt($webpbnCounter.valueAsNumber));
+  });
+
+  document.querySelector("#nonogramsOrgButton").addEventListener("click", function(event) {
+    loadPuzzle(NONOGRAMS_SOURCE_URL, parseInt($nonogramsOrgCounter.valueAsNumber));
+  });
+
+  document.querySelector('body').addEventListener("keydown", function(event) {
+    if (event.ctrlKey && event.keyCode === 13) {
+      $solveButton.click();
+    }
+  });
 }
 
-function loadPuzzleFromInput(input) {
+function setKeyHandlerForLoading(input) {
   input.addEventListener("keypress", function(event) {
     // Number 13 is the "Enter" key on the keyboard
     if (event.keyCode === 13 || event.which === 13) {

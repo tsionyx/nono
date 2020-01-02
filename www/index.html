@@ -14,65 +14,84 @@
       flex-direction: column;
     }
 
+    summary {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      outline: none;
+    }
+
+    #originalUrl {
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
     #mainArea {
       display: flex;
-      align-items: center;
+      justify-content: flex-start;
     }
 
     #srcArea {
-      display: flex;
-      align-items: center;
+      padding: 20px;
+    }
+
+    #imageArea {
+      padding-left: 30px;
     }
 
     #nonoSrc {
       height: 200px;
-      width: 100%;
-    }
-
-    #imageArea,#srcArea {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      width: 350px;
+      min-width: 350px;
+      margin-top: 20px;
     }
 
     #nonoCanvas {
       margin: 10px;
     }
 
-    button {
-      margin: 20px;
+    .counter {
+      width: 80px;
     }
 
+    .loadDescriptionButton {}
+
+    #originalUrl {
+      max-width: 350px;
+    }
+
+    #solve {
+      margin: 20px;
+    }
   </style>
 </head>
 
 <body>
-  <div id="mainArea">
-    <div id="srcArea">
-      <details>
-        <summary>Load from <a href="https://webpbn.com">Web Paint-by-Number</a></summary>
-        <input type="number" id="webpbnCounter" name="https://webpbn.com" min="1" max="35000">
-      </details>
-      <details>
-        <summary>Load from <a href="http://nonograms.org">Nonograms.org</a></summary>
-        <input type="number" id="nonogramsOrgCounter" name="http://nonograms.org" min="1" max="30000">
-      </details>
+<div id="mainArea">
+  <div id="srcArea">
+    <details>
+      <summary>Load from <a href="https://webpbn.com">Web Paint-by-Number</a></summary>
+      <input type="number" class="counter" id="webpbnCounter" name="https://webpbn.com" min="1" max="35000">
+      <button class="loadDescriptionButton" id="webpbnButton">Load description</button>
+    </details>
+    <details>
+      <summary>Load from <a href="http://nonograms.org">Nonograms.org</a></summary>
+      <input type="number" class="counter" id="nonogramsOrgCounter" name="http://nonograms.org" min="1" max="30000">
+      <button class="loadDescriptionButton" id="nonogramsOrgButton">Load description</button>
+    </details>
 
-      <textarea id="nonoSrc"></textarea>
-      <div id="originalUrl"></div>
-    </div>
-
-    <button id="solve">Solve!</button>
+    <textarea id="nonoSrc"></textarea>
+    <div id="originalUrl"></div>
     <button id="share">Share</button>
-
-    <div id="imageArea">
-      <canvas id="nonoCanvas"></canvas>
-      <span id="timeToSolve"></span>
-    </div>
+    <button id="solve">Solve!</button>
   </div>
 
+  <div id="imageArea">
+    <canvas id="nonoCanvas"></canvas>
+    <div id="timeToSolve"></div>
+  </div>
+</div>
 
-  <script src="./index.js"></script>
+<script src="./index.js"></script>
 </body>
 
 </html>
