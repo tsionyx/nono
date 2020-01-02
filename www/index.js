@@ -18,6 +18,14 @@ function initPage() {
       'content': document.querySelector("#nonoSrc").value
     });
   });
+
+  document.querySelector("#share").addEventListener("click", function(event) {
+    const content = document.querySelector("#nonoSrc").value;
+    if (content) {
+      const encoded = encodeURIComponent(content);
+      history.pushState(null, document.title, '?s=' + encoded);
+    }
+  });
 }
 
 function loadPuzzleFromInput(input) {
@@ -38,14 +46,24 @@ function loadPuzzleFromInput(input) {
 }
 
 function initFromArgs() {
-   const puzzleId = intValFromQuery('id');
-   if (puzzleId) {
-     console.log(puzzleId);
+  const parameters = new URL(window.location).searchParams;
 
-     // TODO: make for other source
-     document.querySelector("#webpbnCounter").value = puzzleId;
-     loadPuzzle(WEBPBN_SOURCE_URL, puzzleId);
-   }
+  const content = parameters.get('s');
+  if (content) {
+    document.querySelector("#nonoSrc").value = content;
+  } else {
+    const webPbnId = parseInt(parameters.get('id'));
+    const nonogramsOrgId = parseInt(parameters.get('noid'));
+    if (webPbnId) {
+      console.log("Loading webpbn.com from query: " + webPbnId);
+      document.querySelector("#webpbnCounter").value = webPbnId;
+      loadPuzzle(WEBPBN_SOURCE_URL, webPbnId);
+    } else if (nonogramsOrgId) {
+      console.log("Loading nonograms.org from query: " + nonogramsOrgId);
+      document.querySelector("#nonogramsOrgCounter").value = nonogramsOrgId;
+      loadPuzzle(NONOGRAMS_SOURCE_URL, nonogramsOrgId);
+    }
+  }
 }
 
 function workerCallback(e) {
@@ -70,7 +88,7 @@ function workerCallback(e) {
         'hash': hash,
       };
       const maxSolutions = intValFromQuery('solutions');
-      if (maxSolutions !== undefined) {
+      if (!isNaN(maxSolutions)) {
         solveMsg.maxSolutions = maxSolutions;
       }
       worker.postMessage(solveMsg);
@@ -389,9 +407,6 @@ function clearCanvas() {
 
 // ========================= HELPERS =========================
 function intValFromQuery(arg) {
-  const val = document.location.search.split(arg + '=');
-  if (val.length < 2) {
-    return undefined;
-  }
-  return parseInt(val[1]);
+  const parameters = new URL(window.location).searchParams;
+  return parseInt(parameters.get(arg));
 }
