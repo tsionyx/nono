@@ -123,7 +123,12 @@ function workerCallback(e) {
       break;
 
     case 'solvePuzzle':
-      const msg = "Time to solve the puzzle with hash " + hash + ": " + +data.time.toFixed(2) + "ms";
+      const timeMs = +data.time.toFixed(2);
+      let timeAsStr = timeMs + "ms";
+      if (timeMs > 1000) {
+        timeAsStr = timeMs/1000.0 + " seconds";
+      }
+      const msg = "Time to solve the puzzle with hash " + hash + ": " + timeAsStr;
       document.querySelector("#timeToSolve").innerHTML = msg;
       worker.postMessage({
         'cmd': 'renderCells',
