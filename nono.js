@@ -2,14 +2,6 @@
     const __exports = {};
     let wasm;
 
-    /**
-    * @returns {number}
-    */
-    __exports.white_color_code = function() {
-        const ret = wasm.white_color_code();
-        return ret;
-    };
-
     let cachegetInt32Memory = null;
     function getInt32Memory() {
         if (cachegetInt32Memory === null || cachegetInt32Memory.buffer !== wasm.memory.buffer) {
@@ -100,22 +92,33 @@
         WASM_VECTOR_LEN = offset;
         return ptr;
     }
+
+    const u32CvtShim = new Uint32Array(2);
+
+    const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
     /**
-    * @param {number} source
-    * @param {number} id
     * @param {string} content
+    * @returns {BigInt}
     */
-    __exports.board_with_content = function(source, id, content) {
-        wasm.board_with_content(source, id, passStringToWasm(content), WASM_VECTOR_LEN);
+    __exports.init_board = function(content) {
+        const retptr = 8;
+        const ret = wasm.init_board(retptr, passStringToWasm(content), WASM_VECTOR_LEN);
+        const memi32 = getInt32Memory();
+        u32CvtShim[0] = memi32[retptr / 4 + 0];
+        u32CvtShim[1] = memi32[retptr / 4 + 1];
+        const n0 = uint64CvtShim[0];
+        return n0;
     };
 
     /**
-    * @param {number} source
-    * @param {number} id
+    * @param {BigInt} hash
     * @param {number} max_solutions
     */
-    __exports.solve = function(source, id, max_solutions) {
-        wasm.solve(source, id, max_solutions);
+    __exports.solve = function(hash, max_solutions) {
+        uint64CvtShim[0] = hash;
+        const low0 = u32CvtShim[0];
+        const high0 = u32CvtShim[1];
+        wasm.solve(low0, high0, max_solutions);
     };
 
     const heap = new Array(32);
@@ -156,9 +159,6 @@ function takeObject(idx) {
     dropObject(idx);
     return ret;
 }
-/**
-*/
-__exports.Source = Object.freeze({ WebPbnCom:0,NonogramsOrg:1, });
 /**
 */
 class WasmRenderer {
@@ -264,13 +264,22 @@ class WasmRenderer {
         return v0;
     }
     /**
-    * @param {number} source
-    * @param {number} id
+    * @param {BigInt} hash
     * @returns {WasmRenderer}
     */
-    static from_board(source, id) {
-        const ret = wasm.wasmrenderer_from_board(source, id);
+    static for_board(hash) {
+        uint64CvtShim[0] = hash;
+        const low0 = u32CvtShim[0];
+        const high0 = u32CvtShim[1];
+        const ret = wasm.wasmrenderer_for_board(low0, high0);
         return WasmRenderer.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    static white_color_code() {
+        const ret = wasm.wasmrenderer_white_color_code();
+        return ret;
     }
 }
 __exports.WasmRenderer = WasmRenderer;

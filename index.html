@@ -12,35 +12,86 @@
       width: 100%; //height: 100%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    }
+
+    summary {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      outline: none;
+    }
+
+    #originalUrl {
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
+    #mainArea {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    #srcArea {
+      padding: 20px;
+    }
+
+    #imageArea {
+      padding-left: 30px;
+    }
+
+    #nonoSrc {
+      height: 200px;
+      width: 350px;
+      min-width: 350px;
+      margin-top: 20px;
     }
 
     #nonoCanvas {
       margin: 10px;
     }
 
-    button {
-      margin: 20px;
+    .counter {
+      width: 80px;
     }
 
+    .loadDescriptionButton {}
+
+    #originalUrl {
+      max-width: 350px;
+    }
+
+    #solve {
+      margin: 20px;
+    }
   </style>
 </head>
 
 <body>
-  <div>
-    <input id="puzzleId" placeholder="Enter ID of the puzzle here" type="text">
-    <input checked name="source" type="radio" value="https://webpbn.com"><a href="https://webpbn.com">https://webpbn.com</a>
-    <input name="source" type="radio" value="http://nonograms.org"><a href="http://nonograms.org">http://nonograms.org</a>
-  </div>
-  <div>
-    <button id="get">Solve!</button>
-    <span id="timeToSolve"></span>
-  </div>
-  <canvas id="nonoCanvas"></canvas>
-  <div id="originalUrl"></div>
+<div id="mainArea">
+  <div id="srcArea">
+    <details>
+      <summary>Load from <a href="https://webpbn.com">Web Paint-by-Number</a></summary>
+      <input type="number" class="counter" id="webpbnCounter" name="https://webpbn.com" min="1" max="35000">
+      <button class="loadDescriptionButton" id="webpbnButton">Load description</button>
+    </details>
+    <details>
+      <summary>Load from <a href="http://nonograms.org">Nonograms.org</a></summary>
+      <input type="number" class="counter" id="nonogramsOrgCounter" name="http://nonograms.org" min="1" max="30000">
+      <button class="loadDescriptionButton" id="nonogramsOrgButton">Load description</button>
+    </details>
 
-  <script src="./index.js"></script>
+    <textarea id="nonoSrc"></textarea>
+    <div id="originalUrl"></div>
+    <button id="share">Share</button>
+    <button id="solve">Solve!</button>
+  </div>
+
+  <div id="imageArea">
+    <canvas id="nonoCanvas"></canvas>
+    <div id="timeToSolve"></div>
+  </div>
+</div>
+
+<script src="./index.js"></script>
 </body>
 
 </html>
