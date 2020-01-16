@@ -94,6 +94,24 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
+/**
+* @param {string} content
+* @returns {number}
+*/
+__exports.init_board = function(content) {
+    var ptr0 = passStringToWasm0(content, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = WASM_VECTOR_LEN;
+    var ret = wasm.init_board(ptr0, len0);
+    return ret >>> 0;
+};
+
+/**
+* @param {number} hash
+* @param {number} max_solutions
+*/
+__exports.solve = function(hash, max_solutions) {
+    wasm.solve(hash, max_solutions);
+};
 
 let cachegetInt32Memory0 = null;
 function getInt32Memory0() {
@@ -102,36 +120,6 @@ function getInt32Memory0() {
     }
     return cachegetInt32Memory0;
 }
-
-const u32CvtShim = new Uint32Array(2);
-
-const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
-/**
-* @param {string} content
-* @returns {BigInt}
-*/
-__exports.init_board = function(content) {
-    var ptr0 = passStringToWasm0(content, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = WASM_VECTOR_LEN;
-    wasm.init_board(8, ptr0, len0);
-    var r0 = getInt32Memory0()[8 / 4 + 0];
-    var r1 = getInt32Memory0()[8 / 4 + 1];
-    u32CvtShim[0] = r0;
-    u32CvtShim[1] = r1;
-    const n1 = uint64CvtShim[0];
-    return n1;
-};
-
-/**
-* @param {BigInt} hash
-* @param {number} max_solutions
-*/
-__exports.solve = function(hash, max_solutions) {
-    uint64CvtShim[0] = hash;
-    const low0 = u32CvtShim[0];
-    const high0 = u32CvtShim[1];
-    wasm.solve(low0, high0, max_solutions);
-};
 
 let cachegetUint16Memory0 = null;
 function getUint16Memory0() {
@@ -187,14 +175,11 @@ class WasmRenderer {
         wasm.__wbg_wasmrenderer_free(ptr);
     }
     /**
-    * @param {BigInt} hash
+    * @param {number} hash
     * @returns {WasmRenderer}
     */
     static for_board(hash) {
-        uint64CvtShim[0] = hash;
-        const low0 = u32CvtShim[0];
-        const high0 = u32CvtShim[1];
-        var ret = wasm.wasmrenderer_for_board(low0, high0);
+        var ret = wasm.wasmrenderer_for_board(hash);
         return WasmRenderer.__wrap(ret);
     }
     /**
