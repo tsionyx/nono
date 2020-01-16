@@ -126,7 +126,7 @@ function workerCallback(e) {
       const timeMs = +data.time.toFixed(2);
       let timeAsStr = timeMs + "ms";
       if (timeMs > 1000) {
-        timeAsStr = timeMs/1000.0 + " seconds";
+        timeAsStr = (timeMs / 1000.0).toFixed(3) + " seconds";
       }
       const msg = "Time to solve the puzzle with hash " + hash + ": " + timeAsStr;
       document.querySelector("#timeToSolve").innerHTML = msg;
