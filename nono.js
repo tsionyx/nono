@@ -40,42 +40,6 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
 
-let cachegetInt32Memory0 = null;
-function getInt32Memory0() {
-    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachegetInt32Memory0;
-}
-
-let cachegetUint16Memory0 = null;
-function getUint16Memory0() {
-    if (cachegetUint16Memory0 === null || cachegetUint16Memory0.buffer !== wasm.memory.buffer) {
-        cachegetUint16Memory0 = new Uint16Array(wasm.memory.buffer);
-    }
-    return cachegetUint16Memory0;
-}
-
-function getArrayU16FromWasm0(ptr, len) {
-    return getUint16Memory0().subarray(ptr / 2, ptr / 2 + len);
-}
-
-let cachegetUint32Memory0 = null;
-function getUint32Memory0() {
-    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
-    }
-    return cachegetUint32Memory0;
-}
-
-function getArrayU32FromWasm0(ptr, len) {
-    return getUint32Memory0().subarray(ptr / 4, ptr / 4 + len);
-}
-
-function getArrayI32FromWasm0(ptr, len) {
-    return getInt32Memory0().subarray(ptr / 4, ptr / 4 + len);
-}
-
 let WASM_VECTOR_LEN = 0;
 
 let cachedTextEncoder = new TextEncoder('utf-8');
@@ -131,6 +95,14 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 
+let cachegetInt32Memory0 = null;
+function getInt32Memory0() {
+    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachegetInt32Memory0;
+}
+
 const u32CvtShim = new Uint32Array(2);
 
 const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
@@ -161,6 +133,34 @@ __exports.solve = function(hash, max_solutions) {
     wasm.solve(low0, high0, max_solutions);
 };
 
+let cachegetUint16Memory0 = null;
+function getUint16Memory0() {
+    if (cachegetUint16Memory0 === null || cachegetUint16Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint16Memory0 = new Uint16Array(wasm.memory.buffer);
+    }
+    return cachegetUint16Memory0;
+}
+
+function getArrayU16FromWasm0(ptr, len) {
+    return getUint16Memory0().subarray(ptr / 2, ptr / 2 + len);
+}
+
+let cachegetUint32Memory0 = null;
+function getUint32Memory0() {
+    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachegetUint32Memory0;
+}
+
+function getArrayU32FromWasm0(ptr, len) {
+    return getUint32Memory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function getArrayI32FromWasm0(ptr, len) {
+    return getInt32Memory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
 function addHeapObject(obj) {
     if (heap_next === heap.length) heap.push(heap.length + 1);
     const idx = heap_next;
@@ -185,6 +185,24 @@ class WasmRenderer {
         this.ptr = 0;
 
         wasm.__wbg_wasmrenderer_free(ptr);
+    }
+    /**
+    * @param {BigInt} hash
+    * @returns {WasmRenderer}
+    */
+    static for_board(hash) {
+        uint64CvtShim[0] = hash;
+        const low0 = u32CvtShim[0];
+        const high0 = u32CvtShim[1];
+        var ret = wasm.wasmrenderer_for_board(low0, high0);
+        return WasmRenderer.__wrap(ret);
+    }
+    /**
+    * @returns {number}
+    */
+    static white_color_code() {
+        var ret = wasm.wasmrenderer_white_color_code();
+        return ret;
     }
     /**
     * @returns {number}
@@ -272,24 +290,6 @@ class WasmRenderer {
         var v0 = getArrayI32FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 4);
         return v0;
-    }
-    /**
-    * @param {BigInt} hash
-    * @returns {WasmRenderer}
-    */
-    static for_board(hash) {
-        uint64CvtShim[0] = hash;
-        const low0 = u32CvtShim[0];
-        const high0 = u32CvtShim[1];
-        var ret = wasm.wasmrenderer_for_board(low0, high0);
-        return WasmRenderer.__wrap(ret);
-    }
-    /**
-    * @returns {number}
-    */
-    static white_color_code() {
-        var ret = wasm.wasmrenderer_white_color_code();
-        return ret;
     }
 }
 __exports.WasmRenderer = WasmRenderer;
