@@ -56,7 +56,9 @@ pub fn init_board(content: String) -> u64 {
     let parser = DetectedParser::with_content(content).expect("Parsing failed");
     let new_board = match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
-            let board = MutRc::new(parser.parse());
+            let mut board = parser.parse();
+            board.reduce_colors();
+            let board = MutRc::new(board);
             VarBoard::MultiColor(board)
         }
         PuzzleScheme::BlackAndWhite => {
@@ -103,9 +105,10 @@ where
         solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(MutRc::clone(board), Some(max_solutions))
             .unwrap();
 
-    if let Some(mut solutions) = solutions {
-        let first_solution = solutions.next().expect("No solutions found");
-        Board::restore_with_callback(MutRc::clone(board), first_solution);
+    if let Some(solutions) = solutions {
+        // force to find all solutions up to `max_solutions`
+        let last_solution = solutions.last().expect("No solutions found");
+        Board::restore_with_callback(MutRc::clone(board), last_solution);
     }
 }
 
