@@ -34,17 +34,19 @@ enum VarBoard {
     MultiColor(MutRc<Board<ColoredBlock>>),
 }
 
+type HashInt = u32;
+
 lazy_static! {
-    static ref BOARDS: Mutex<HashMap<u64, VarBoard>> = <_>::default();
+    static ref BOARDS: Mutex<HashMap<HashInt, VarBoard>> = Default::default();
 }
 
-fn boards() -> MutexGuard<'static, HashMap<u64, VarBoard>> {
+fn boards() -> MutexGuard<'static, HashMap<HashInt, VarBoard>> {
     BOARDS.lock().expect("Cannot lock the boards mutex")
 }
 
 #[wasm_bindgen]
 #[must_use]
-pub fn init_board(content: String) -> u64 {
+pub fn init_board(content: String) -> HashInt {
     utils::set_panic_hook();
 
     let id = calculate_hash(&content);
@@ -71,7 +73,7 @@ pub fn init_board(content: String) -> u64 {
 }
 
 #[wasm_bindgen]
-pub fn solve(hash: u64, max_solutions: usize) {
+pub fn solve(hash: HashInt, max_solutions: usize) {
     let board = &boards()[&hash];
     match board {
         VarBoard::BlackAndWhite(board) => solve_and_render(board, max_solutions),
@@ -81,7 +83,7 @@ pub fn solve(hash: u64, max_solutions: usize) {
 
 #[wasm_bindgen]
 impl WasmRenderer {
-    pub fn for_board(hash: u64) -> Self {
+    pub fn for_board(hash: HashInt) -> Self {
         let board = &boards()[&hash];
         match board {
             VarBoard::BlackAndWhite(board) => Self::with_black_and_white(board),
@@ -112,8 +114,8 @@ where
     }
 }
 
-fn calculate_hash<T: Hash>(t: &T) -> u64 {
+fn calculate_hash<T: Hash>(t: &T) -> HashInt {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
-    s.finish()
+    s.finish() as HashInt
 }
