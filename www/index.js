@@ -1,9 +1,9 @@
+var worker = new Worker('worker.js');
+worker.addEventListener('message', workerCallback, false);
+
 document.addEventListener("DOMContentLoaded", function(event) {
   initPage();
 });
-
-var worker = new Worker('worker.js');
-worker.addEventListener('message', workerCallback, false);
 
 function initPage() {
   const $webpbnCounter = document.querySelector("#webpbnCounter");
@@ -96,6 +96,9 @@ function workerCallback(e) {
   const hash = data.hash;
 
   switch (data.result) {
+    case 'init':
+      break;
+
     case 'initBoard':
       worker.postMessage({
         'cmd': 'renderDescriptions',
