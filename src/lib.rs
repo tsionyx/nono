@@ -1,8 +1,13 @@
 use std::collections::{hash_map::DefaultHasher, HashMap};
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::sync::{Mutex, MutexGuard};
 
+use flate2::{
+    write::{ZlibDecoder as Decoder, ZlibEncoder as Encoder},
+    Compression,
+};
 use nonogrid::{
     block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
     board::Board,
@@ -118,4 +123,27 @@ fn calculate_hash<T: Hash>(t: &T) -> HashInt {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
     s.finish() as HashInt
+}
+
+#[wasm_bindgen]
+pub fn compress(content: &str) -> String {
+    let mut encoder = Encoder::new(Vec::new(), Compression::best());
+    encoder
+        .write_all(content.as_ref())
+        .expect("Cannot write to gzip encoder");
+    let bytes = encoder.finish().expect("Cannot encode to base64");
+
+    base64::encode(&bytes)
+}
+
+#[wasm_bindgen]
+pub fn decompress(content: &str) -> String {
+    let bytes = base64::decode(content).expect("Cannot decode base64 string");
+
+    let mut decoder = Decoder::new(Vec::new());
+    decoder
+        .write_all(&bytes)
+        .expect("Cannot write to gzip decoder");
+    let bytes = decoder.finish().expect("Cannot get encoded result");
+    String::from_utf8(bytes).expect("String parsing error")
 }

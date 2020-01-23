@@ -27,8 +27,11 @@ function initPage() {
   document.querySelector("#share").addEventListener("click", function(event) {
     const content = $nonoSrcInput.value;
     if (content) {
-      const encoded = encodeURIComponent(content);
-      history.pushState(null, document.title, '?s=' + encoded);
+      console.log("Size of the content to share:", content.length);
+      worker.postMessage({
+        'cmd': 'compress',
+        'content': content
+      });
     }
   });
 
@@ -64,12 +67,15 @@ function setKeyHandlerForLoading(input) {
   });
 }
 
+var deferred_decompress_content = null;
+
 function initFromArgs() {
   const parameters = new URL(window.location).searchParams;
 
   const content = parameters.get('s');
   if (content) {
-    document.querySelector("#nonoSrc").value = content;
+    // wait until the worker gets ready to decompress the value
+    deferred_decompress_content = content;
   } else {
     const webPbnId = parseInt(parameters.get('id'));
     const nonogramsOrgId = parseInt(parameters.get('noid'));
@@ -97,6 +103,24 @@ function workerCallback(e) {
 
   switch (data.result) {
     case 'init':
+      if (deferred_decompress_content !== null) {
+        worker.postMessage({
+          'cmd': 'decompress',
+          'content': deferred_decompress_content
+        });
+        console.log("Size of the argument to decompress:", deferred_decompress_content.length);
+      }
+      break;
+
+    case 'compress':
+      const encoded = encodeURIComponent(data.content);
+      console.log("Size of encoded content:", encoded.length);
+      history.pushState(null, document.title, '?s=' + encoded);
+      break;
+
+    case 'decompress':
+      console.log("Size of decoded content:", data.content.length);
+      document.querySelector("#nonoSrc").value = data.content;
       break;
 
     case 'initBoard':

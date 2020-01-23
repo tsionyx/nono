@@ -1,5 +1,7 @@
 importScripts('nono.js');
 const {
+  compress,
+  decompress,
   init_board,
   solve,
   WasmRenderer
@@ -59,6 +61,20 @@ function response(e) {
 
   console.log("Worker received a message: ", data);
   switch (data.cmd) {
+    case 'compress':
+      self.postMessage({
+        'result': data.cmd,
+        'content': compress(data.content),
+      });
+      break;
+
+    case 'decompress':
+      self.postMessage({
+        'result': data.cmd,
+        'content': decompress(data.content),
+      });
+      break;
+
     case 'initBoard':
       const hash_id = init_board(data.content);
       console.log("Worker initialized puzzle with hash " + hash_id);
