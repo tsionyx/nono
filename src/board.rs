@@ -12,6 +12,7 @@ use nonogrid::{
 };
 use wasm_bindgen::prelude::*;
 
+#[derive(Debug)]
 struct BoardWrapper<B>
 where
     B: Block,
@@ -152,6 +153,7 @@ where
 }
 
 #[wasm_bindgen]
+#[derive(Debug)]
 pub struct WasmRenderer {
     binary: Option<BoardWrapper<BinaryBlock>>,
     colored: Option<BoardWrapper<ColoredBlock>>,
