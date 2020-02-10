@@ -21,7 +21,7 @@ Some query arguments are supported:
 - **s** - the puzzle description can be specified in full form here to paste it into source field
 (https://tsionyx.github.io/nono/?s=1%201%0A0%0A1%201%0A%0A1%201%0A0%0A1%201).
 You can generate the direct link to puzzle with the 'Share' button.
-- **solutons** - specify how many solutions should be found before the puzzle should be considered solved
+- **solutions** - specify how many solutions should be found before the puzzle should be considered solved
 (by default _solutions=2_ used to verify if the puzzle is unique);
 
 
