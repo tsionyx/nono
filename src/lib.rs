@@ -1,3 +1,6 @@
+//! Wraps the nonogram solver `https://github.com/tsionyx/nonogrid`
+//! to use it in the WASM environment.
+
 #![warn(absolute_paths_not_starting_with_crate)]
 #![warn(anonymous_parameters)]
 #![warn(box_pointers)]
@@ -11,7 +14,7 @@
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
 #![warn(missing_doc_code_examples)]
-//#![warn(missing_docs)]  // TODO
+#![warn(missing_docs)]
 #![warn(non_ascii_idents)]
 #![warn(private_doc_tests)]
 #![warn(single_use_lifetimes)]
@@ -77,6 +80,8 @@ fn boards() -> MutexGuard<'static, HashMap<HashInt, VarBoard>> {
 
 #[wasm_bindgen]
 #[must_use]
+/// Initialize a nonogram board from the given description.
+/// The unique ID (based on the content) returned to use the board later.
 pub fn init_board(content: String) -> HashInt {
     utils::set_panic_hook();
 
@@ -105,6 +110,8 @@ pub fn init_board(content: String) -> HashInt {
 }
 
 #[wasm_bindgen]
+/// Find a board by given ID and solve it.
+/// The last found solution will be set to render it later.
 pub fn solve(hash: HashInt, max_solutions: usize) {
     let board = &boards()[&hash];
     match board {
