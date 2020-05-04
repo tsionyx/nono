@@ -95,6 +95,8 @@ function passStringToWasm0(arg, malloc, realloc) {
     return ptr;
 }
 /**
+* Initialize a nonogram board from the given description.
+* The unique ID (based on the content) returned to use the board later.
 * @param {string} content
 * @returns {number}
 */
@@ -106,6 +108,8 @@ __exports.init_board = function(content) {
 };
 
 /**
+* Find a board by given ID and solve it.
+* The last found solution will be set to render it later.
 * @param {number} hash
 * @param {number} max_solutions
 */
@@ -131,18 +135,6 @@ function getUint16Memory0() {
 
 function getArrayU16FromWasm0(ptr, len) {
     return getUint16Memory0().subarray(ptr / 2, ptr / 2 + len);
-}
-
-let cachegetUint32Memory0 = null;
-function getUint32Memory0() {
-    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
-    }
-    return cachegetUint32Memory0;
-}
-
-function getArrayU32FromWasm0(ptr, len) {
-    return getUint32Memory0().subarray(ptr / 4, ptr / 4 + len);
 }
 
 function getArrayI32FromWasm0(ptr, len) {
@@ -243,25 +235,25 @@ class WasmRenderer {
     }
     /**
     * @param {number} i
-    * @returns {Uint32Array}
+    * @returns {Int32Array}
     */
     get_row_colors(i) {
         wasm.wasmrenderer_get_row_colors(8, this.ptr, i);
         var r0 = getInt32Memory0()[8 / 4 + 0];
         var r1 = getInt32Memory0()[8 / 4 + 1];
-        var v0 = getArrayU32FromWasm0(r0, r1).slice();
+        var v0 = getArrayI32FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 4);
         return v0;
     }
     /**
     * @param {number} i
-    * @returns {Uint32Array}
+    * @returns {Int32Array}
     */
     get_column_colors(i) {
         wasm.wasmrenderer_get_column_colors(8, this.ptr, i);
         var r0 = getInt32Memory0()[8 / 4 + 0];
         var r1 = getInt32Memory0()[8 / 4 + 1];
-        var v0 = getArrayU32FromWasm0(r0, r1).slice();
+        var v0 = getArrayI32FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 4);
         return v0;
     }
@@ -280,7 +272,15 @@ class WasmRenderer {
 __exports.WasmRenderer = WasmRenderer;
 
 function init(module) {
-
+    if (typeof module === 'undefined') {
+        let src;
+        if (self.document === undefined) {
+            src = self.location.href;
+        } else {
+            src = self.document.currentScript.src;
+        }
+        module = src.replace(/\.js$/, '_bg.wasm');
+    }
     let result;
     const imports = {};
     imports.wbg = {};

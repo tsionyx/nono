@@ -8,6 +8,9 @@ const {
 async function init() {
   await wasm_bindgen('./nono_bg.wasm');
   self.addEventListener('message', response, false);
+  self.postMessage({
+    'result': 'init',
+  });
 }
 
 function collectDataForDescriptionsRender(hash) {
@@ -54,12 +57,13 @@ function collectDataForCellsRender(hash) {
 function response(e) {
   var data = e.data;
 
+  console.log("Worker received a message: ", data);
   switch (data.cmd) {
     case 'initBoard':
       const hash_id = init_board(data.content);
       console.log("Worker initialized puzzle with hash " + hash_id);
       self.postMessage({
-        'result': 'initBoard',
+        'result': data.cmd,
         'hash': hash_id,
       });
       break;
@@ -67,7 +71,7 @@ function response(e) {
     case 'renderDescriptions':
       const objDesc = collectDataForDescriptionsRender(data.hash);
       self.postMessage({
-        'result': 'renderDescriptions',
+        'result': data.cmd,
         'obj': objDesc
       });
       break;
@@ -75,7 +79,7 @@ function response(e) {
     case 'renderCells':
       const objCells = collectDataForCellsRender(data.hash);
       self.postMessage({
-        'result': 'renderCells',
+        'result': data.cmd,
         'obj': objCells
       });
       break;
@@ -93,7 +97,7 @@ function response(e) {
       console.timeEnd("solve puzzle #" + hash);
 
       self.postMessage({
-        'result': 'solvePuzzle',
+        'result': data.cmd,
         'time': t1 - t0,
         'hash': hash,
       });

@@ -1,9 +1,9 @@
+var worker = new Worker('worker.js');
+worker.addEventListener('message', workerCallback, false);
+
 document.addEventListener("DOMContentLoaded", function(event) {
   initPage();
 });
-
-var worker = new Worker('worker.js');
-worker.addEventListener('message', workerCallback, false);
 
 function initPage() {
   const $webpbnCounter = document.querySelector("#webpbnCounter");
@@ -96,6 +96,9 @@ function workerCallback(e) {
   const hash = data.hash;
 
   switch (data.result) {
+    case 'init':
+      break;
+
     case 'initBoard':
       worker.postMessage({
         'cmd': 'renderDescriptions',
@@ -126,7 +129,7 @@ function workerCallback(e) {
       const timeMs = +data.time.toFixed(2);
       let timeAsStr = timeMs + "ms";
       if (timeMs > 1000) {
-        timeAsStr = timeMs/1000.0 + " seconds";
+        timeAsStr = (timeMs / 1000.0).toFixed(3) + " seconds";
       }
       const msg = "Time to solve the puzzle with hash " + hash + ": " + timeAsStr;
       document.querySelector("#timeToSolve").innerHTML = msg;

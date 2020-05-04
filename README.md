@@ -7,10 +7,10 @@ The descriptions can be in a wide variety of formats:
   - formats that can be [exported from webpbn](https://webpbn.com/export.cgi):
     _faase, ish, keen, makhorin, nin, olsak, ss, syro_. All of them, except _olsak_,
     supports only black-and-white puzzles;
-  - encoded format of https://nonograms.org.
+  - the encoded format of https://nonograms.org.
 
 
-Special counter inputs allow to download puzzles by the ID from the two collections:
+Special counter inputs allow downloading puzzles by the ID from the two collections:
 - https://webpbn.com/
 - http://www.nonograms.org/
 
@@ -21,7 +21,7 @@ Some query arguments are supported:
 - **s** - the puzzle description can be specified in full form here to paste it into source field
 (https://tsionyx.github.io/nono/?s=1%201%0A0%0A1%201%0A%0A1%201%0A0%0A1%201).
 You can generate the direct link to puzzle with the 'Share' button.
-- **solutons** - specify how many solutions should be found before the puzzle should be considered solved
+- **solutions** - specify how many solutions should be found before the puzzle should be considered solved
 (by default _solutions=2_ used to verify if the puzzle is unique);
 
 
