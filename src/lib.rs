@@ -27,6 +27,7 @@
 #![warn(unused_qualifications)]
 #![warn(unused_results)]
 #![warn(variant_size_differences)]
+#![allow(clippy::cast_possible_truncation)]
 
 use std::collections::{hash_map::DefaultHasher, HashMap};
 use std::fmt::Display;
@@ -57,7 +58,7 @@ mod utils;
 // allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+static ALLOC: wee_alloc::WeeAlloc<'_> = wee_alloc::WeeAlloc::INIT;
 
 enum VarBoard {
     BlackAndWhite(MutRc<Board<BinaryBlock>>),
@@ -67,7 +68,7 @@ enum VarBoard {
 type HashInt = u32;
 
 lazy_static! {
-    static ref BOARDS: Mutex<HashMap<HashInt, VarBoard>> = Default::default();
+    static ref BOARDS: Mutex<HashMap<HashInt, VarBoard>> = Mutex::new(HashMap::new());
 }
 
 fn boards() -> MutexGuard<'static, HashMap<HashInt, VarBoard>> {
@@ -123,9 +124,8 @@ impl WasmRenderer {
     }
 
     #[wasm_bindgen]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn white_color_code() -> i32 {
-        board::WHITE_COLOR_CODE
+        board::space_color_code()
     }
 }
 

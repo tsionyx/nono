@@ -12,6 +12,38 @@ use nonogrid::{
 };
 use wasm_bindgen::prelude::*;
 
+#[derive(Debug, Copy, Clone)]
+struct ColorCode {
+    inner: i32,
+}
+
+impl ColorCode {
+    const SPACE: Self = Self { inner: -1 };
+    const UNKNOWN: Self = Self { inner: -2 };
+
+    fn from_rgb(r: u8, g: u8, b: u8) -> Self {
+        Self {
+            inner: (i32::from(r) << 16) + (i32::from(g) << 8) + i32::from(b),
+        }
+    }
+
+    /// rgb(0, 0, 0)
+    fn black() -> Self {
+        Self::from_rgb(0, 0, 0)
+    }
+
+    /// rgb(255, 255, 255)
+    fn white() -> Self {
+        // (1 << 24) - 1
+        Self::from_rgb(0xff, 0xff, 0xff)
+    }
+}
+
+#[allow(clippy::missing_const_for_fn)]
+pub(crate) fn space_color_code() -> i32 {
+    ColorCode::SPACE.inner
+}
+
 #[derive(Debug)]
 struct BoardWrapper<B>
 where
@@ -20,11 +52,8 @@ where
     board: MutRc<Board<B>>,
     rows: Vec<ReadRc<Description<B>>>,
     columns: Vec<ReadRc<Description<B>>>,
-    color_cache: RefCell<HashMap<ColorId, Option<u32>>>,
+    color_cache: RefCell<HashMap<ColorId, Option<ColorCode>>>,
 }
-
-pub(super) const WHITE_COLOR_CODE: i32 = -1;
-const UNKNOWN_COLOR_CODE: i32 = -2;
 
 impl<B> BoardWrapper<B>
 where
@@ -75,7 +104,7 @@ where
         row_width + self.cols_number()
     }
 
-    fn color_for_id(&self, color_id: ColorId) -> Option<u32> {
+    fn color_for_id(&self, color_id: ColorId) -> Option<ColorCode> {
         *self
             .color_cache
             .borrow_mut()
@@ -83,18 +112,18 @@ where
             .or_insert_with(|| {
                 let color_desc = self.board.read().desc_by_id(color_id)?;
                 let rgb = color_desc.rgb_value();
-                Some((u32::from(rgb.0) << 16) + (u32::from(rgb.1) << 8) + u32::from(rgb.2))
+                Some(ColorCode::from_rgb(rgb.0, rgb.1, rgb.2))
             })
     }
 
-    fn rgb_for_block(&self, block: &B) -> Option<u32> {
+    fn rgb_for_block(&self, block: &B) -> Option<ColorCode> {
         let color_id = block.color().as_color_id();
-        // BinaryColor
-        if color_id.is_none() {
-            // (255, 255, 255) = white color
-            return Some((1 << 24) - 1);
+        if let Some(color_id) = color_id {
+            self.color_for_id(color_id)
+        } else {
+            // BinaryColor
+            Some(ColorCode::white())
         }
-        self.color_for_id(color_id.unwrap())
     }
 
     fn get_row(&self, i: usize) -> Vec<u16> {
@@ -109,20 +138,20 @@ where
             .collect()
     }
 
-    fn get_row_colors(&self, i: usize) -> Vec<u32> {
-        self.rows[i]
+    fn get_colors_for(&self, row: bool, index: usize) -> impl Iterator<Item = ColorCode> + '_ {
+        let lines = if row { &self.rows } else { &self.columns };
+        lines[index]
             .vec
             .iter()
-            .map(|x| self.rgb_for_block(x).unwrap_or(0))
-            .collect()
+            .map(move |x| self.rgb_for_block(x).unwrap_or_else(ColorCode::white))
     }
 
-    fn get_column_colors(&self, i: usize) -> Vec<u32> {
-        self.columns[i]
-            .vec
-            .iter()
-            .map(|x| self.rgb_for_block(x).unwrap_or(0))
-            .collect()
+    fn get_row_colors(&self, i: usize) -> Vec<i32> {
+        self.get_colors_for(true, i).map(|x| x.inner).collect()
+    }
+
+    fn get_column_colors(&self, i: usize) -> Vec<i32> {
+        self.get_colors_for(false, i).map(|x| x.inner).collect()
     }
 
     fn cells_as_colors(&self) -> Vec<i32> {
@@ -132,22 +161,22 @@ where
             .flatten()
             .map(|cell| {
                 if cell == &B::Color::blank() {
-                    return WHITE_COLOR_CODE;
+                    return ColorCode::SPACE;
                 }
 
                 let color_id = cell.as_color_id();
-                // BinaryColor
-                if color_id.is_none() {
-                    return if cell.is_solved() {
-                        0 // (0, 0, 0) = black color
+                if let Some(color_id) = color_id {
+                    self.color_for_id(color_id).unwrap_or(ColorCode::UNKNOWN)
+                } else {
+                    // BinaryColor
+                    if cell.is_solved() {
+                        ColorCode::black()
                     } else {
-                        UNKNOWN_COLOR_CODE
-                    };
+                        ColorCode::UNKNOWN
+                    }
                 }
-
-                self.color_for_id(color_id.unwrap())
-                    .map_or(UNKNOWN_COLOR_CODE, |x| x as i32)
             })
+            .map(|code| code.inner)
             .collect()
     }
 }
@@ -218,11 +247,11 @@ impl WasmRenderer {
         binary_or_colored!(self.get_column i)
     }
 
-    pub fn get_row_colors(&self, i: usize) -> Vec<u32> {
+    pub fn get_row_colors(&self, i: usize) -> Vec<i32> {
         binary_or_colored!(self.get_row_colors i)
     }
 
-    pub fn get_column_colors(&self, i: usize) -> Vec<u32> {
+    pub fn get_column_colors(&self, i: usize) -> Vec<i32> {
         binary_or_colored!(self.get_column_colors i)
     }
 
