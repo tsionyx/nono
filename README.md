@@ -7,10 +7,10 @@ The descriptions can be in a wide variety of formats:
   - formats that can be [exported from webpbn](https://webpbn.com/export.cgi):
     _faase, ish, keen, makhorin, nin, olsak, ss, syro_. All of them, except _olsak_,
     supports only black-and-white puzzles;
-  - encoded format of https://nonograms.org.
+  - the encoded format of https://nonograms.org.
 
 
-Special counter inputs allow to download puzzles by the ID from the two collections:
+Special counter inputs allow downloading puzzles by the ID from the two collections:
 - https://webpbn.com/
 - http://www.nonograms.org/
 
