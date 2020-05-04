@@ -40,7 +40,7 @@ impl ColorCode {
 }
 
 #[allow(clippy::missing_const_for_fn)]
-pub(crate) fn space_color_code() -> i32 {
+pub(super) fn space_color_code() -> i32 {
     ColorCode::SPACE.inner
 }
 
