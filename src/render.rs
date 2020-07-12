@@ -30,11 +30,6 @@ impl ColorCode {
     }
 }
 
-#[allow(clippy::missing_const_for_fn)]
-pub(super) fn space_color_code() -> i32 {
-    ColorCode::SPACE.inner
-}
-
 #[derive(Debug)]
 struct BoardWrapper<B>
 where
@@ -214,6 +209,11 @@ macro_rules! binary_or_colored {
 
 #[wasm_bindgen]
 impl WasmRenderer {
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn white_color_code() -> i32 {
+        ColorCode::SPACE.inner
+    }
+
     pub fn rows_number(&self) -> usize {
         binary_or_colored!(self.rows_number)
     }
