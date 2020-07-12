@@ -1,15 +1,6 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
-use nonogrid::{
-    block::{
-        base::{color::ColorId, Block, Color, Description},
-        binary::BinaryBlock,
-        multicolor::ColoredBlock,
-    },
-    board::Board,
-    utils::rc::{MutRc, ReadRc},
-};
+use nonogrid::{BinaryBlock, Block, Color, ColorId, ColoredBlock, Description, RcBoard};
 use wasm_bindgen::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
@@ -49,9 +40,9 @@ struct BoardWrapper<B>
 where
     B: Block,
 {
-    board: MutRc<Board<B>>,
-    rows: Vec<ReadRc<Description<B>>>,
-    columns: Vec<ReadRc<Description<B>>>,
+    board: RcBoard<B>,
+    rows: Vec<Arc<Description<B>>>,
+    columns: Vec<Arc<Description<B>>>,
     color_cache: RefCell<HashMap<ColorId, Option<ColorCode>>>,
 }
 
@@ -59,30 +50,30 @@ impl<B> BoardWrapper<B>
 where
     B: Block,
 {
-    fn from_board(board: &MutRc<Board<B>>) -> Self {
+    fn from_board(board: &RcBoard<B>) -> Self {
         let rows = board
             .read()
             .descriptions(true)
             .iter()
-            .map(|desc| ReadRc::clone(desc))
+            .map(|desc| Arc::clone(desc))
             .collect();
         let columns = board
             .read()
             .descriptions(false)
             .iter()
-            .map(|desc| ReadRc::clone(desc))
+            .map(|desc| Arc::clone(desc))
             //.map(|desc| desc.vec.iter().map(|x| x.0 as u16).collect())
             .collect();
 
         Self {
-            board: MutRc::clone(board),
+            board: RcBoard::clone(board),
             rows,
             columns,
             color_cache: RefCell::new(HashMap::new()),
         }
     }
 
-    fn longest_desc(vec: &[ReadRc<Description<B>>]) -> usize {
+    fn longest_desc(vec: &[Arc<Description<B>>]) -> usize {
         vec.iter().map(|col| col.vec.len()).max().unwrap_or(0)
     }
 
@@ -189,13 +180,13 @@ pub struct WasmRenderer {
 }
 
 impl WasmRenderer {
-    pub fn with_black_and_white(board: &MutRc<Board<BinaryBlock>>) -> Self {
+    pub fn with_black_and_white(board: &RcBoard<BinaryBlock>) -> Self {
         Self {
             binary: Some(BoardWrapper::from_board(board)),
             colored: None,
         }
     }
-    pub fn with_colored(board: &MutRc<Board<ColoredBlock>>) -> Self {
+    pub fn with_colored(board: &RcBoard<ColoredBlock>) -> Self {
         Self {
             binary: None,
             colored: Some(BoardWrapper::from_board(board)),

@@ -32,27 +32,21 @@
 #![warn(variant_size_differences)]
 #![allow(clippy::cast_possible_truncation)]
 
-use std::collections::{hash_map::DefaultHasher, HashMap};
-use std::fmt::Display;
-use std::hash::{Hash, Hasher};
-use std::sync::{Mutex, MutexGuard};
+use std::{
+    collections::{hash_map::DefaultHasher, HashMap},
+    fmt::Display,
+    hash::{Hash, Hasher},
+    sync::{Mutex, MutexGuard},
+};
 
+use lazy_static::lazy_static;
 use nonogrid::{
-    block::{base::Block, binary::BinaryBlock, multicolor::ColoredBlock},
-    board::Board,
-    parser::{BoardParser, DetectedParser, PuzzleScheme},
-    //render::{Renderer, ShellRenderer},
-    solver::{
-        self,
-        line::{DynamicColor, DynamicSolver},
-        probing::FullProbe1,
-    },
-    utils::rc::MutRc,
+    parser::PuzzleScheme, solve as solve_nonogram, BinaryBlock, Block, Board, BoardParser,
+    ColoredBlock, DetectedParser, DynamicColor, FullProbe, LineSolver, RcBoard,
 };
 use wasm_bindgen::prelude::*;
 
-use board::WasmRenderer;
-use lazy_static::lazy_static;
+use self::board::WasmRenderer;
 
 mod board;
 mod utils;
@@ -64,8 +58,8 @@ mod utils;
 static ALLOC: wee_alloc::WeeAlloc<'_> = wee_alloc::WeeAlloc::INIT;
 
 enum VarBoard {
-    BlackAndWhite(MutRc<Board<BinaryBlock>>),
-    MultiColor(MutRc<Board<ColoredBlock>>),
+    BlackAndWhite(RcBoard<BinaryBlock>),
+    MultiColor(RcBoard<ColoredBlock>),
 }
 
 type HashInt = u32;
@@ -82,7 +76,7 @@ fn boards() -> MutexGuard<'static, HashMap<HashInt, VarBoard>> {
 #[must_use]
 /// Initialize a nonogram board from the given description.
 /// The unique ID (based on the content) returned to use the board later.
-pub fn init_board(content: String) -> HashInt {
+pub fn init_board(content: &str) -> HashInt {
     utils::set_panic_hook();
 
     let id = calculate_hash(&content);
@@ -94,13 +88,12 @@ pub fn init_board(content: String) -> HashInt {
     let parser = DetectedParser::with_content(content).expect("Parsing failed");
     let new_board = match parser.infer_scheme() {
         PuzzleScheme::MultiColor => {
-            let mut board = parser.parse();
-            board.reduce_colors();
-            let board = MutRc::new(board);
+            let board = parser.parse_rc();
+            board.write().reduce_colors();
             VarBoard::MultiColor(board)
         }
         PuzzleScheme::BlackAndWhite => {
-            let board = MutRc::new(parser.parse());
+            let board = parser.parse_rc();
             VarBoard::BlackAndWhite(board)
         }
     };
@@ -130,25 +123,26 @@ impl WasmRenderer {
         }
     }
 
-    #[wasm_bindgen]
     pub fn white_color_code() -> i32 {
         board::space_color_code()
     }
 }
 
-fn solve_and_render<B>(board: &MutRc<Board<B>>, max_solutions: usize)
+fn solve_and_render<B>(board: &RcBoard<B>, max_solutions: usize)
 where
     B: Block + Display,
     B::Color: DynamicColor + Display,
 {
-    let solutions =
-        solver::run::<_, DynamicSolver<_>, FullProbe1<_>>(MutRc::clone(board), Some(max_solutions))
-            .unwrap();
+    let solutions = solve_nonogram::<_, LineSolver<_>, FullProbe<_>>(
+        RcBoard::clone(board),
+        Some(max_solutions),
+    )
+    .unwrap();
 
     if let Some(solutions) = solutions {
         // force to find all solutions up to `max_solutions`
         let last_solution = solutions.last().expect("No solutions found");
-        Board::restore_with_callback(MutRc::clone(board), last_solution);
+        Board::restore_with_callback(RcBoard::clone(board), last_solution);
     }
 }
 
