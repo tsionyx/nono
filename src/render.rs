@@ -212,18 +212,22 @@ impl WasmRenderer {
         ColorCode::SPACE.inner
     }
 
+    #[wasm_bindgen(getter)]
     pub fn rows_number(&self) -> usize {
         binary_or_colored!(self.rows_number)
     }
 
+    #[wasm_bindgen(getter)]
     pub fn cols_number(&self) -> usize {
         binary_or_colored!(self.cols_number)
     }
 
+    #[wasm_bindgen(getter)]
     pub fn full_height(&self) -> usize {
         binary_or_colored!(self.full_height)
     }
 
+    #[wasm_bindgen(getter)]
     pub fn full_width(&self) -> usize {
         binary_or_colored!(self.full_width)
     }
@@ -244,6 +248,7 @@ impl WasmRenderer {
         binary_or_colored!(self.get_column_colors i)
     }
 
+    #[wasm_bindgen(getter)]
     pub fn cells_as_colors(&self) -> Vec<i32> {
         binary_or_colored!(self.cells_as_colors)
     }

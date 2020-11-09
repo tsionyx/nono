@@ -72,6 +72,7 @@ pub fn solve(hash: HashInt, max_solutions: usize) {
 
 #[wasm_bindgen]
 impl WasmRenderer {
+    #[wasm_bindgen(constructor)]
     pub fn for_board(hash: HashInt) -> Self {
         let board = &boards()[&hash];
         match board {

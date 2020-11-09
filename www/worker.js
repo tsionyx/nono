@@ -16,25 +16,26 @@ async function init() {
 function collectDataForDescriptionsRender(hash) {
   console.log("Worker collecting descriptions for puzzle #" + hash);
 
-  let result = {}
-  const desc = WasmRenderer.for_board(hash);
-  result.full_height = desc.full_height();
-  result.full_width = desc.full_width();
-  result.rows = [];
-  result.rowsColors = [];
-  result.cols = [];
-  result.colsColors = [];
+  const renderer = new WasmRenderer(hash);
+  let result = {
+    full_height: renderer.full_height,
+    full_width: renderer.full_width,
+    rows: [],
+    rowsColors: [],
+    cols: [],
+    colsColors: []
+  };
 
-  const rows_number = desc.rows_number();
+  const rows_number = renderer.rows_number;
   for (let i = 0; i < rows_number; i++) {
-    result.rows.push(desc.get_row(i));
-    result.rowsColors.push(desc.get_row_colors(i));
+    result.rows.push(renderer.get_row(i));
+    result.rowsColors.push(renderer.get_row_colors(i));
   }
 
-  const cols_number = desc.cols_number();
+  const cols_number = renderer.cols_number;
   for (let i = 0; i < cols_number; i++) {
-    result.cols.push(desc.get_column(i));
-    result.colsColors.push(desc.get_column_colors(i));
+    result.cols.push(renderer.get_column(i));
+    result.colsColors.push(renderer.get_column_colors(i));
   }
   return result;
 }
@@ -42,16 +43,15 @@ function collectDataForDescriptionsRender(hash) {
 function collectDataForCellsRender(hash) {
   console.log("Worker collecting cells for puzzle #" + hash);
 
-  let result = {}
-  const desc = WasmRenderer.for_board(hash);
-  result.full_height = desc.full_height();
-  result.full_width = desc.full_width();
-  result.rows_number = desc.rows_number();
-  result.cols_number = desc.cols_number();
-  result.cells_as_colors = desc.cells_as_colors();
-  result.white_color_code = WasmRenderer.white_color_code();
-
-  return result;
+  const renderer = new WasmRenderer(hash);
+  return {
+    full_height: renderer.full_height,
+    full_width: renderer.full_width,
+    rows_number: renderer.rows_number,
+    cols_number: renderer.cols_number,
+    cells_as_colors: renderer.cells_as_colors,
+    white_color_code: WasmRenderer.white_color_code()
+  };
 }
 
 function response(e) {
