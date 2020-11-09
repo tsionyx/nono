@@ -5,7 +5,7 @@ FROM ubuntu
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update
-RUN apt-get install build-essential curl git cmake python python3 -y
+RUN apt-get install build-essential curl git cmake python python3 node-typescript -y
 
 # add a user rust
 RUN useradd -ms /bin/bash rust
