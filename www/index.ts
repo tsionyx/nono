@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function initPage() {
   const $webpbnCounter = document.querySelector("#webpbnCounter");
   const $nonogramsOrgCounter = document.querySelector("#nonogramsOrgCounter");
-  const $nonoSrcInput = document.querySelector("#nonoSrc");
-  const $solveButton = document.querySelector("#solve");
+  const $nonoSrcInput = <HTMLInputElement>document.querySelector("#nonoSrc");
+  const $solveButton = <HTMLElement>document.querySelector("#solve");
 
   setKeyHandlerForLoading($webpbnCounter);
   setKeyHandlerForLoading($nonogramsOrgCounter);
@@ -33,11 +33,11 @@ function initPage() {
   });
 
   document.querySelector("#webpbnButton").addEventListener("click", function(event) {
-    loadPuzzle(WEBPBN_SOURCE_URL, parseInt($webpbnCounter.valueAsNumber));
+    loadPuzzle(WEBPBN_SOURCE_URL, ($webpbnCounter as HTMLInputElement).valueAsNumber);
   });
 
   document.querySelector("#nonogramsOrgButton").addEventListener("click", function(event) {
-    loadPuzzle(NONOGRAMS_SOURCE_URL, parseInt($nonogramsOrgCounter.valueAsNumber));
+    loadPuzzle(NONOGRAMS_SOURCE_URL, ($nonogramsOrgCounter as HTMLInputElement).valueAsNumber);
   });
 
   document.querySelector('body').addEventListener("keydown", function(event) {
@@ -65,21 +65,21 @@ function setKeyHandlerForLoading(input) {
 }
 
 function initFromArgs() {
-  const parameters = new URL(window.location).searchParams;
+  const parameters = searchParams();
 
   const content = parameters.get('s');
   if (content) {
-    document.querySelector("#nonoSrc").value = content;
+    (document.querySelector("#nonoSrc") as HTMLInputElement).value = content;
   } else {
     const webPbnId = parseInt(parameters.get('id'));
     const nonogramsOrgId = parseInt(parameters.get('noid'));
     if (webPbnId) {
       console.log("Loading webpbn.com from query: " + webPbnId);
-      document.querySelector("#webpbnCounter").value = webPbnId;
+      (document.querySelector("#webpbnCounter") as HTMLInputElement).value = webPbnId.toString();
       loadPuzzle(WEBPBN_SOURCE_URL, webPbnId);
     } else if (nonogramsOrgId) {
       console.log("Loading nonograms.org from query: " + nonogramsOrgId);
-      document.querySelector("#nonogramsOrgCounter").value = nonogramsOrgId;
+      (document.querySelector("#nonogramsOrgCounter") as HTMLInputElement).value = nonogramsOrgId.toString();
       loadPuzzle(NONOGRAMS_SOURCE_URL, nonogramsOrgId);
     }
   }
@@ -111,7 +111,7 @@ function workerCallback(e) {
       };
       const maxSolutions = intValFromQuery('solutions');
       if (!isNaN(maxSolutions)) {
-        solveMsg.maxSolutions = maxSolutions;
+        solveMsg["maxSolutions"] = maxSolutions;
       }
       worker.postMessage(solveMsg);
       document.querySelector("#timeToSolve").innerHTML = "Solving puzzle with hash " + hash + "...";
@@ -160,11 +160,12 @@ function successCallback(sourceUrl, puzzleUrl) {
     var data = xhttp.responseText;
     let src = data;
     if (sourceUrl == NONOGRAMS_SOURCE_URL) {
+      var match = null;
       while ((match = NONOGRAMS_ENCODED_SRC_RE.exec(data)) !== null) {
         src = match[0];
       }
     }
-    document.querySelector("#nonoSrc").value = src;
+    (document.querySelector("#nonoSrc") as HTMLInputElement).value = src;
     document.querySelector("#originalUrl").innerHTML = "<a href=" + puzzleUrl + ">Original puzzle URL</a>";
     //clearCanvas();
   };
@@ -293,7 +294,7 @@ function renderPuzzleDesc(desc) {
   const height = desc.full_height;
   const width = desc.full_width;
 
-  const canvas = document.querySelector("#nonoCanvas");
+  const canvas = <HTMLCanvasElement>document.querySelector("#nonoCanvas");
   canvas.height = (CELL_SIZE + 1) * height + 3;
   canvas.width = (CELL_SIZE + 1) * width + 3;
 
@@ -349,7 +350,7 @@ function renderPuzzleCells(desc) {
   const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
   const white_color_code = desc.white_color_code;
 
-  const canvas = document.querySelector("#nonoCanvas");
+  const canvas = <HTMLCanvasElement>document.querySelector("#nonoCanvas");
   const ctx = canvas.getContext('2d');
   ctx.beginPath();
   for (let i = 0; i < rows_number; i++) {
@@ -427,13 +428,17 @@ function drawGrid(ctx, x_start, y_start, width, height) {
 }
 
 function clearCanvas() {
-  const canvas = document.querySelector("#nonoCanvas");
+  const canvas = <HTMLCanvasElement>document.querySelector("#nonoCanvas");
   var context = canvas.getContext('2d');
   context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 // ========================= HELPERS =========================
+function searchParams() {
+    return new URL(window.location.href).searchParams;
+}
+
 function intValFromQuery(arg) {
-  const parameters = new URL(window.location).searchParams;
+  const parameters = searchParams();
   return parseInt(parameters.get(arg));
 }
