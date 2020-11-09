@@ -104,12 +104,9 @@ where
 
     fn rgb_for_block(&self, block: &B) -> Option<ColorCode> {
         let color_id = block.color().as_color_id();
-        if let Some(color_id) = color_id {
+        color_id.map_or(Some(ColorCode::white()), |color_id| {
             self.color_for_id(color_id)
-        } else {
-            // BinaryColor
-            Some(ColorCode::white())
-        }
+        })
     }
 
     fn get_row(&self, i: usize) -> Vec<u16> {
@@ -151,16 +148,17 @@ where
                 }
 
                 let color_id = cell.as_color_id();
-                if let Some(color_id) = color_id {
-                    self.color_for_id(color_id).unwrap_or(ColorCode::UNKNOWN)
-                } else {
-                    // BinaryColor
-                    if cell.is_solved() {
-                        ColorCode::black()
-                    } else {
-                        ColorCode::UNKNOWN
-                    }
-                }
+                color_id.map_or_else(
+                    || {
+                        // None is BinaryColor
+                        if cell.is_solved() {
+                            ColorCode::black()
+                        } else {
+                            ColorCode::UNKNOWN
+                        }
+                    },
+                    |color_id| self.color_for_id(color_id).unwrap_or(ColorCode::UNKNOWN),
+                )
             })
             .map(|code| code.inner)
             .collect()
