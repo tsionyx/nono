@@ -168,9 +168,8 @@ class WasmRenderer {
     }
     /**
     * @param {number} hash
-    * @returns {WasmRenderer}
     */
-    static for_board(hash) {
+    constructor(hash) {
         var ret = wasm.wasmrenderer_for_board(hash);
         return WasmRenderer.__wrap(ret);
     }
@@ -184,28 +183,28 @@ class WasmRenderer {
     /**
     * @returns {number}
     */
-    rows_number() {
+    get rows_number() {
         var ret = wasm.wasmrenderer_rows_number(this.ptr);
         return ret >>> 0;
     }
     /**
     * @returns {number}
     */
-    cols_number() {
+    get cols_number() {
         var ret = wasm.wasmrenderer_cols_number(this.ptr);
         return ret >>> 0;
     }
     /**
     * @returns {number}
     */
-    full_height() {
+    get full_height() {
         var ret = wasm.wasmrenderer_full_height(this.ptr);
         return ret >>> 0;
     }
     /**
     * @returns {number}
     */
-    full_width() {
+    get full_width() {
         var ret = wasm.wasmrenderer_full_width(this.ptr);
         return ret >>> 0;
     }
@@ -260,7 +259,7 @@ class WasmRenderer {
     /**
     * @returns {Int32Array}
     */
-    cells_as_colors() {
+    get cells_as_colors() {
         wasm.wasmrenderer_cells_as_colors(8, this.ptr);
         var r0 = getInt32Memory0()[8 / 4 + 0];
         var r1 = getInt32Memory0()[8 / 4 + 1];

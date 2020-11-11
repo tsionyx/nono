@@ -29,6 +29,7 @@ You can generate the direct link to puzzle with the 'Share' button.
 
 ```bash
 wasm-pack build --target no-modules --no-typescript
+tsc www/index.js
 wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 ```
 
