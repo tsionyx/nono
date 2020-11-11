@@ -41,7 +41,8 @@ script:
   - ./binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 
 before_deploy:
-  - pushd www && node_modules/.bin/tsc static/index.ts && popd
+  # - git ls-files static | xargs -I{} find {} -type f | xargs eslint --ignore-pattern '*.html'
+  - pushd www && node_modules/.bin/eslint static/ --ext .js --ext .ts && node_modules/.bin/tsc static/index.ts && popd
   - cp www/static/*.html www/static/{index,worker}.js pkg/
   - rm pkg/package.json
 
