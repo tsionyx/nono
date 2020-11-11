@@ -5,7 +5,8 @@ FROM ubuntu
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update
-RUN apt-get install build-essential curl git cmake python python3 node-typescript -y
+RUN apt-get install nodejs-dev node-gyp libssl1.0-dev -y
+RUN apt-get install build-essential curl git cmake python python3 npm -y
 
 # add a user rust
 RUN useradd -ms /bin/bash rust
@@ -40,6 +41,12 @@ RUN source ~/.cargo/env && wasm-pack build --target no-modules --no-typescript
 
 # optimize
 RUN ../binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
+
+# run TypeScript
+WORKDIR www
+RUN npm install
+RUN node_modules/.bin/tsc static/index.ts
+
 
 # start a web server
 RUN cp static/*.html static/{index,worker}.js pkg/

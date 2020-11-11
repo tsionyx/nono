@@ -18,7 +18,11 @@ addons:
       - curl
       - cmake
       - git
-      - node-typescript
+      # https://askubuntu.com/a/1092849
+      - nodejs-dev
+      - node-gyp
+      - libssl1.0-dev
+      - npm
 
 before_script:
   - rustup component add rustfmt
@@ -27,17 +31,17 @@ before_script:
   - test -d binaryen/.git || git clone https://github.com/WebAssembly/binaryen.git
   # the last working version is the 'a0c423ef501' commit
   - pushd binaryen && git checkout a0c423ef501 && cmake . && make wasm-opt && popd
-  - pushd www && tsc --version && popd
+  - pushd www && npm install && node_modules/.bin/tsc --version && popd
 
 script:
   - cargo fmt -- --check
   - cargo clippy --all-targets --all-features --workspace -- -Dwarnings -W clippy::nursery -W clippy::pedantic
   - cargo test --all-features --workspace
   - wasm-pack build --target no-modules --no-typescript
-  - pushd www && tsc static/index.ts && popd
   - ./binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 
 before_deploy:
+  - pushd www && node_modules/.bin/tsc static/index.ts && popd
   - cp www/static/*.html www/static/{index,worker}.js pkg/
   - rm pkg/package.json
 
