@@ -27,18 +27,18 @@ before_script:
   - test -d binaryen/.git || git clone https://github.com/WebAssembly/binaryen.git
   # the last working version is the 'a0c423ef501' commit
   - pushd binaryen && git checkout a0c423ef501 && cmake . && make wasm-opt && popd
-  - tsc --version
+  - pushd www && tsc --version && popd
 
 script:
   - cargo fmt -- --check
   - cargo clippy --all-targets --all-features --workspace -- -Dwarnings -W clippy::nursery -W clippy::pedantic
   - cargo test --all-features --workspace
   - wasm-pack build --target no-modules --no-typescript
-  - tsc www/index.ts
+  - pushd www && tsc static/index.ts && popd
   - ./binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 
 before_deploy:
-  - cp www/*.html www/{index,worker}.js pkg/
+  - cp www/static/*.html www/static/{index,worker}.js pkg/
   - rm pkg/package.json
 
 stages:

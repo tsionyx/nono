@@ -32,7 +32,7 @@ RUN mkdir nono
 WORKDIR nono
 ADD src ./src
 ADD tests ./tests
-ADD www ./www
+ADD www/static ./static
 ADD Cargo.* ./
 
 # build
@@ -42,7 +42,7 @@ RUN source ~/.cargo/env && wasm-pack build --target no-modules --no-typescript
 RUN ../binaryen/bin/wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 
 # start a web server
-RUN cp www/*.html www/{index,worker}.js pkg/
+RUN cp static/*.html static/{index,worker}.js pkg/
 WORKDIR pkg
 EXPOSE 8000
 CMD ["python3", "-mhttp.server"]

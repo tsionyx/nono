@@ -35,7 +35,9 @@ wasm-opt pkg/nono_bg.wasm -O3 -o pkg/nono_bg.wasm
 ### Run the local copy
 
 ```
-tsc www/index.ts
+cd www
+tsc static/index.ts
+cd static
 python3 -m http.server
 ```
 
