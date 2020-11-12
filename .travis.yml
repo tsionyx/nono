@@ -18,19 +18,25 @@ addons:
       - curl
       - cmake
       - git
-      # https://askubuntu.com/a/1092849
-      - nodejs-dev
-      - node-gyp
-      - libssl1.0-dev
-      - npm
 
-before_script:
+install:
+  # Rust
   - rustup component add rustfmt
   - rustup component add clippy
+
+  # WASM
   - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
   - test -d binaryen/.git || git clone https://github.com/WebAssembly/binaryen.git
-  # the last working version is the 'a0c423ef501' commit
+
+  # frontend stuff
+  - curl https://nodejs.org/dist/v14.15.0/node-v14.15.0-linux-x64.tar.xz > node.tar.xz
+  - tar -xf node.tar.xz
+  - export PATH=$(pwd)/node-v14.15.0-linux-x64/bin:$PATH
+
+before_script:
+  # the last working version of 'binaryen' is the 'a0c423ef501' commit
   - pushd binaryen && git checkout a0c423ef501 && cmake . && make wasm-opt && popd
+  - npm --version
   - pushd www && npm install && node_modules/.bin/tsc --version && popd
 
 script:

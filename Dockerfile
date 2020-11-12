@@ -5,8 +5,12 @@ FROM ubuntu
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update
-RUN apt-get install nodejs-dev node-gyp libssl1.0-dev -y
-RUN apt-get install build-essential curl git cmake python python3 npm -y
+RUN apt-get install build-essential curl git cmake python python3 -y
+
+# install nodejs
+RUN curl https://nodejs.org/dist/v14.15.0/node-v14.15.0-linux-x64.tar.xz > node.tar.xz
+RUN tar -xf node.tar.xz
+ENV PATH="$(pwd)/node-v14.15.0-linux-x64/bin:${PATH}"
 
 # add a user rust
 RUN useradd -ms /bin/bash rust
