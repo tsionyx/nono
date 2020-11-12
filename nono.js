@@ -100,10 +100,10 @@ function passStringToWasm0(arg, malloc, realloc) {
 * @param {string} content
 * @returns {number}
 */
-__exports.init_board = function(content) {
+__exports.initBoard = function(content) {
     var ptr0 = passStringToWasm0(content, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     var len0 = WASM_VECTOR_LEN;
-    var ret = wasm.init_board(ptr0, len0);
+    var ret = wasm.initBoard(ptr0, len0);
     return ret >>> 0;
 };
 
