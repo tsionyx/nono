@@ -99,7 +99,7 @@ function workerCallback (e) {
     case 'init':
       break
 
-    case 'initBoard':
+    case 'initBoard': {
       worker.postMessage({
         cmd: 'renderDescriptions',
         hash: hash
@@ -111,11 +111,12 @@ function workerCallback (e) {
       }
       const maxSolutions = intValFromQuery('solutions')
       if (!isNaN(maxSolutions)) {
-        solveMsg.maxSolutions = maxSolutions
+        solveMsg['maxSolutions'] = maxSolutions /* eslint-disable-line dot-notation */
       }
       worker.postMessage(solveMsg)
       document.querySelector('#timeToSolve').innerHTML = 'Solving puzzle with hash ' + hash + '...'
       break
+    }
 
     case 'renderDescriptions':
       renderPuzzleDesc(data.obj)
@@ -125,7 +126,7 @@ function workerCallback (e) {
       renderPuzzleCells(data.obj)
       break
 
-    case 'solvePuzzle':
+    case 'solvePuzzle': {
       const timeMs = +data.time.toFixed(2)
       let timeAsStr = timeMs + 'ms'
       if (timeMs > 1000) {
@@ -138,6 +139,7 @@ function workerCallback (e) {
         hash: hash
       })
       break
+    }
 
     default:
       console.error('Unknown response from worker: ', data.result)
@@ -149,17 +151,18 @@ const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/'
 const WEBPBN_SOURCE_URL = 'https://webpbn.com'
 const NONOGRAMS_SOURCE_URL = 'http://nonograms.org'
 
-const sourceUrlToPuzzleUrl = new Object()
-sourceUrlToPuzzleUrl[WEBPBN_SOURCE_URL] = WEBPBN_SOURCE_URL + '/export.cgi'
-sourceUrlToPuzzleUrl[NONOGRAMS_SOURCE_URL] = NONOGRAMS_SOURCE_URL + '/nonograms2/i/'
+const sourceUrlToPuzzleUrl = {
+  [WEBPBN_SOURCE_URL]: WEBPBN_SOURCE_URL + '/export.cgi',
+  [NONOGRAMS_SOURCE_URL]: NONOGRAMS_SOURCE_URL + '/nonograms2/i/'
+}
 
-const NONOGRAMS_ENCODED_SRC_RE = /var d=(\[[\[\]\d, ]+\]);/gm
+const NONOGRAMS_ENCODED_SRC_RE = /var d=(\[[[\]\d, ]+\]);/gm
 
 function successCallback (sourceUrl, puzzleUrl) {
   return function (xhttp) {
     const data = xhttp.responseText
     let src = data
-    if (sourceUrl == NONOGRAMS_SOURCE_URL) {
+    if (sourceUrl === NONOGRAMS_SOURCE_URL) {
       let match = null
       while ((match = NONOGRAMS_ENCODED_SRC_RE.exec(data)) !== null) {
         src = match[0]
@@ -178,32 +181,28 @@ function failCallback (msg) {
   }
 }
 
-function doGet (url, callback, error_callback) {
+function requestWithCallbacks (successCallback, errorCallback) {
   const xhttp = new XMLHttpRequest()
   xhttp.onreadystatechange = function () {
-    if (this.readyState == 4) {
-      if (Math.floor(this.status / 100) == 2) {
-        callback(this)
+    if (this.readyState === 4) {
+      if (Math.floor(this.status / 100) === 2) {
+        successCallback(this)
       } else {
-        error_callback(this)
+        errorCallback(this)
       }
     }
   }
+  return xhttp
+}
+
+function doGet (url, successCallback, errorCallback) {
+  const xhttp = requestWithCallbacks(successCallback, errorCallback)
   xhttp.open('GET', url, true)
   xhttp.send(null)
 }
 
-function doPost (url, body, callback, error_callback) {
-  const xhttp = new XMLHttpRequest()
-  xhttp.onreadystatechange = function () {
-    if (this.readyState == 4) {
-      if (Math.floor(this.status / 100) == 2) {
-        callback(this)
-      } else {
-        error_callback(this)
-      }
-    }
-  }
+function doPost (url, body, successCallback, errorCallback) {
+  const xhttp = requestWithCallbacks(successCallback, errorCallback)
   xhttp.open('POST', url, true)
   xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
   xhttp.send(body)
@@ -220,7 +219,7 @@ function loadPuzzle (sourceUrl, id) {
   let url = sourceUrlToPuzzleUrl[sourceUrl]
 
   let puzzleUrl
-  if (sourceUrl == WEBPBN_SOURCE_URL) {
+  if (sourceUrl === WEBPBN_SOURCE_URL) {
     puzzleUrl = sourceUrl + '/?id=' + id
     doPost(CORS_PROXY + url,
       'fmt=olsak&go=1&id=' + id,
@@ -232,7 +231,7 @@ function loadPuzzle (sourceUrl, id) {
     doGet(CORS_PROXY + url,
       successCallback(sourceUrl, puzzleUrl),
       function (xhttp) {
-        if (xhttp.status == 404) {
+        if (xhttp.status === 404) {
           const fixedUrl = url.replace('nonograms2', 'nonograms')
           console.log('Try to find the puzzle #' + id + ' on another URL: ' + fixedUrl)
           doGet(CORS_PROXY + fixedUrl,
@@ -248,7 +247,7 @@ function loadPuzzle (sourceUrl, id) {
 // ========================= RENDERING =========================
 const CELL_SIZE = 20 // px
 const GRID_COLOR = '#000000'
-const BLANK_COLOR = '#FFFFFF'
+// const BLANK_COLOR = '#FFFFFF'
 
 const ALMOST_ZERO = 5
 
@@ -291,30 +290,30 @@ function renderBlock (ctx, value, intColor, x, y) {
 }
 
 function renderPuzzleDesc (desc) {
-  const height = desc.full_height
-  const width = desc.full_width
+  const height = desc.fullHeight
+  const width = desc.fullWidth
 
   const canvas = <HTMLCanvasElement>document.querySelector('#nonoCanvas')
   canvas.height = (CELL_SIZE + 1) * height + 3
   canvas.width = (CELL_SIZE + 1) * width + 3
 
   const ctx = canvas.getContext('2d')
-  const rows_number = desc.rows.length
-  const cols_number = desc.cols.length
-  const rows_side_size = width - cols_number
-  const cols_header_size = height - rows_number
-  drawGrid(ctx, rows_side_size, cols_header_size, width, height)
+  const rowsNumber = desc.rows.length
+  const colsNumber = desc.cols.length
+  const rowsSideSize = width - colsNumber
+  const colsHeaderSize = height - rowsNumber
+  drawGrid(ctx, rowsSideSize, colsHeaderSize, width, height)
 
   ctx.beginPath()
   const fontSize = CELL_SIZE * 0.7
   ctx.font = fontSize + 'px Verdana'
 
-  for (let i = 0; i < rows_number; i++) {
+  for (let i = 0; i < rowsNumber; i++) {
     const row = desc.rows[i]
     const rowColors = desc.rowsColors[i]
 
-    const rowOffset = rows_side_size - row.length
-    const rowIndex = cols_header_size + i
+    const rowOffset = rowsSideSize - row.length
+    const rowIndex = colsHeaderSize + i
 
     for (let j = 0; j < row.length; j++) {
       const colIndex = rowOffset + j
@@ -322,12 +321,12 @@ function renderPuzzleDesc (desc) {
     }
   }
 
-  for (let i = 0; i < cols_number; i++) {
+  for (let i = 0; i < colsNumber; i++) {
     const col = desc.cols[i]
     const colColors = desc.colsColors[i]
 
-    const colOffset = cols_header_size - col.length
-    const colIndex = rows_side_size + i
+    const colOffset = colsHeaderSize - col.length
+    const colIndex = rowsSideSize + i
 
     for (let j = 0; j < col.length; j++) {
       const rowIndex = colOffset + j
@@ -338,29 +337,29 @@ function renderPuzzleDesc (desc) {
 }
 
 function renderPuzzleCells (desc) {
-  const height = desc.full_height
-  const width = desc.full_width
+  const height = desc.fullHeight
+  const width = desc.fullWidth
 
-  const rows_number = desc.rows_number
-  const cols_number = desc.cols_number
-  const rows_side_size = width - cols_number
-  const cols_header_size = height - rows_number
-  const cells = desc.cells_as_colors
+  const rowsNumber = desc.rowsNumber
+  const colsNumber = desc.colsNumber
+  const rowsSideSize = width - colsNumber
+  const colsHeaderSize = height - rowsNumber
+  const cells = desc.cellsAsColors
   const whiteDotSize = CELL_SIZE / 10
   const whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2
-  const white_color_code = desc.white_color_code
+  const whiteColorCode = desc.whiteColorCode
 
   const canvas = <HTMLCanvasElement>document.querySelector('#nonoCanvas')
   const ctx = canvas.getContext('2d')
   ctx.beginPath()
-  for (let i = 0; i < rows_number; i++) {
-    const rowStartIndex = i * cols_number
-    const y = cols_header_size + i
+  for (let i = 0; i < rowsNumber; i++) {
+    const rowStartIndex = i * colsNumber
+    const y = colsHeaderSize + i
 
-    for (let j = 0; j < cols_number; j++) {
+    for (let j = 0; j < colsNumber; j++) {
       const index = rowStartIndex + j
       const intColor = cells[index]
-      const x = rows_side_size + j
+      const x = rowsSideSize + j
 
       if (intColor >= 0) {
         const blockColor = '#' + intColor.toString(16).padStart(6, '0')
@@ -371,7 +370,7 @@ function renderPuzzleCells (desc) {
           CELL_SIZE,
           CELL_SIZE
         )
-      } else if (intColor == white_color_code) {
+      } else if (intColor === whiteColorCode) {
         ctx.fillStyle = 'black'
         // ctx.arc(
         //     x * (CELL_SIZE + 1) + 1 + CELL_SIZE / 2,
@@ -393,7 +392,7 @@ function renderPuzzleCells (desc) {
   ctx.stroke()
 }
 
-function drawGrid (ctx, x_start, y_start, width, height) {
+function drawGrid (ctx, xStart, yStart, width, height) {
   ctx.beginPath()
   ctx.strokeStyle = GRID_COLOR
 
@@ -401,36 +400,30 @@ function drawGrid (ctx, x_start, y_start, width, height) {
   const lastY = height * (CELL_SIZE + 1) + 1
 
   // Vertical lines.
-  for (let i = x_start; i <= width; i++) {
+  for (let i = xStart; i <= width; i++) {
     const currentX = i * (CELL_SIZE + 1) + 1
     ctx.moveTo(currentX, 0)
     ctx.lineTo(currentX, lastY)
 
-    if ((i - x_start) % 5 == 0) {
+    if ((i - xStart) % 5 === 0) {
       ctx.moveTo(currentX + 1, 0)
       ctx.lineTo(currentX + 1, lastY)
     }
   }
 
   // Horizontal lines.
-  for (let j = y_start; j <= height; j++) {
+  for (let j = yStart; j <= height; j++) {
     const currentY = j * (CELL_SIZE + 1) + 1
     ctx.moveTo(0, currentY)
     ctx.lineTo(lastX, currentY)
 
-    if ((j - y_start) % 5 == 0) {
+    if ((j - yStart) % 5 === 0) {
       ctx.moveTo(0, currentY + 1)
       ctx.lineTo(lastX, currentY + 1)
     }
   }
 
   ctx.stroke()
-}
-
-function clearCanvas () {
-  const canvas = <HTMLCanvasElement>document.querySelector('#nonoCanvas')
-  const context = canvas.getContext('2d')
-  context.clearRect(0, 0, canvas.width, canvas.height)
 }
 
 // ========================= HELPERS =========================

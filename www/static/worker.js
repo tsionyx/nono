@@ -1,12 +1,12 @@
-importScripts('nono.js')
+importScripts('nono.js') /* eslint-disable-line no-undef */
 const {
-  init_board,
+  initBoard,
   solve,
   WasmRenderer
-} = wasm_bindgen
+} = wasm_bindgen /* eslint-disable-line no-undef,camelcase */
 
 async function init () {
-  await wasm_bindgen('./nono_bg.wasm')
+  await wasm_bindgen('./nono_bg.wasm') /* eslint-disable-line no-undef */
   self.addEventListener('message', response, false)
   self.postMessage({
     result: 'init'
@@ -18,22 +18,22 @@ function collectDataForDescriptionsRender (hash) {
 
   const renderer = new WasmRenderer(hash)
   const result = {
-    full_height: renderer.full_height,
-    full_width: renderer.full_width,
+    fullHeight: renderer.full_height,
+    fullWidth: renderer.full_width,
     rows: [],
     rowsColors: [],
     cols: [],
     colsColors: []
   }
 
-  const rows_number = renderer.rows_number
-  for (let i = 0; i < rows_number; i++) {
+  const rowsNumber = renderer.rows_number
+  for (let i = 0; i < rowsNumber; i++) {
     result.rows.push(renderer.get_row(i))
     result.rowsColors.push(renderer.get_row_colors(i))
   }
 
-  const cols_number = renderer.cols_number
-  for (let i = 0; i < cols_number; i++) {
+  const colsNumber = renderer.cols_number
+  for (let i = 0; i < colsNumber; i++) {
     result.cols.push(renderer.get_column(i))
     result.colsColors.push(renderer.get_column_colors(i))
   }
@@ -45,12 +45,12 @@ function collectDataForCellsRender (hash) {
 
   const renderer = new WasmRenderer(hash)
   return {
-    full_height: renderer.full_height,
-    full_width: renderer.full_width,
-    rows_number: renderer.rows_number,
-    cols_number: renderer.cols_number,
-    cells_as_colors: renderer.cells_as_colors,
-    white_color_code: WasmRenderer.white_color_code()
+    fullHeight: renderer.full_height,
+    fullWidth: renderer.full_width,
+    rowsNumber: renderer.rows_number,
+    colsNumber: renderer.cols_number,
+    cellsAsColors: renderer.cells_as_colors,
+    whiteColorCode: WasmRenderer.white_color_code()
   }
 }
 
@@ -59,36 +59,40 @@ function response (e) {
 
   console.log('Worker received a message: ', data)
   switch (data.cmd) {
-    case 'initBoard':
-      const hash_id = init_board(data.content)
-      console.log('Worker initialized puzzle with hash ' + hash_id)
+    case 'initBoard': {
+      const hashId = initBoard(data.content)
+      console.log('Worker initialized puzzle with hash ' + hashId)
       self.postMessage({
         result: data.cmd,
-        hash: hash_id
+        hash: hashId
       })
       break
+    }
 
-    case 'renderDescriptions':
+    case 'renderDescriptions': {
       const objDesc = collectDataForDescriptionsRender(data.hash)
       self.postMessage({
         result: data.cmd,
         obj: objDesc
       })
       break
+    }
 
-    case 'renderCells':
+    case 'renderCells': {
       const objCells = collectDataForCellsRender(data.hash)
       self.postMessage({
         result: data.cmd,
         obj: objCells
       })
       break
+    }
 
-    case 'solvePuzzle':
+    case 'solvePuzzle': {
       const hash = data.hash
       console.log('Worker starting to solve puzzle #' + hash)
       // try to find 2 solutions to check out if the puzzle has multiple solutions
-      const maxSolutions = data.hasOwnProperty('maxSolutions') ? data.maxSolutions : 2
+      const hasMaxSolutions = Object.prototype.hasOwnProperty.call(data, 'maxSolutions')
+      const maxSolutions = hasMaxSolutions ? data.maxSolutions : 2
 
       console.time('solve puzzle #' + hash)
       const t0 = performance.now()
@@ -102,6 +106,7 @@ function response (e) {
         hash: hash
       })
       break
+    }
 
     default:
       self.postMessage({

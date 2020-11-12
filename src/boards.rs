@@ -29,7 +29,7 @@ fn boards() -> MutexGuard<'static, HashMap<HashInt, VarBoard>> {
     BOARDS.lock().expect("Cannot lock the boards mutex")
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = initBoard)]
 #[must_use]
 /// Initialize a nonogram board from the given description.
 /// The unique ID (based on the content) returned to use the board later.
