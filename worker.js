@@ -18,8 +18,8 @@ function collectDataForDescriptionsRender (hash) {
 
   const renderer = new WasmRenderer(hash)
   const result = {
-    full_height: renderer.full_height,
-    full_width: renderer.full_width,
+    fullHeight: renderer.full_height,
+    fullWidth: renderer.full_width,
     rows: [],
     rowsColors: [],
     cols: [],
@@ -45,11 +45,11 @@ function collectDataForCellsRender (hash) {
 
   const renderer = new WasmRenderer(hash)
   return {
-    full_height: renderer.full_height,
-    full_width: renderer.full_width,
+    fullHeight: renderer.full_height,
+    fullWidth: renderer.full_width,
     rowsNumber: renderer.rows_number,
     colsNumber: renderer.cols_number,
-    cells_as_colors: renderer.cells_as_colors,
+    cellsAsColors: renderer.cells_as_colors,
     whiteColorCode: WasmRenderer.white_color_code()
   }
 }

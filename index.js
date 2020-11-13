@@ -238,8 +238,8 @@ function renderBlock(ctx, value, intColor, x, y) {
     ctx.fillText(value, x * (CELL_SIZE + 1) + horizontalOffset, y * (CELL_SIZE + 1) + verticalOffset);
 }
 function renderPuzzleDesc(desc) {
-    var height = desc.full_height;
-    var width = desc.full_width;
+    var height = desc.fullHeight;
+    var width = desc.fullWidth;
     var canvas = document.querySelector('#nonoCanvas');
     canvas.height = (CELL_SIZE + 1) * height + 3;
     canvas.width = (CELL_SIZE + 1) * width + 3;
@@ -275,13 +275,13 @@ function renderPuzzleDesc(desc) {
     ctx.stroke();
 }
 function renderPuzzleCells(desc) {
-    var height = desc.full_height;
-    var width = desc.full_width;
+    var height = desc.fullHeight;
+    var width = desc.fullWidth;
     var rowsNumber = desc.rowsNumber;
     var colsNumber = desc.colsNumber;
     var rowsSideSize = width - colsNumber;
     var colsHeaderSize = height - rowsNumber;
-    var cells = desc.cells_as_colors;
+    var cells = desc.cellsAsColors;
     var whiteDotSize = CELL_SIZE / 10;
     var whiteDotOffset = (CELL_SIZE - whiteDotSize) / 2;
     var whiteColorCode = desc.whiteColorCode;
