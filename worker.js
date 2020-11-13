@@ -56,34 +56,24 @@ function collectDataForCellsRender (hash) {
 
 function response (e) {
   const data = e.data
-
   console.log('Worker received a message: ', data)
+
+  const response = { result: data.cmd }
   switch (data.cmd) {
     case 'initBoard': {
       const hashId = initBoard(data.content)
       console.log('Worker initialized puzzle with hash ' + hashId)
-      self.postMessage({
-        result: data.cmd,
-        hash: hashId
-      })
+      response.hash = hashId
       break
     }
 
     case 'renderDescriptions': {
-      const objDesc = collectDataForDescriptionsRender(data.hash)
-      self.postMessage({
-        result: data.cmd,
-        obj: objDesc
-      })
+      response.obj = collectDataForDescriptionsRender(data.hash)
       break
     }
 
     case 'renderCells': {
-      const objCells = collectDataForCellsRender(data.hash)
-      self.postMessage({
-        result: data.cmd,
-        obj: objCells
-      })
+      response.obj = collectDataForCellsRender(data.hash)
       break
     }
 
@@ -100,11 +90,8 @@ function response (e) {
       const t1 = performance.now()
       console.timeEnd('solve puzzle #' + hash)
 
-      self.postMessage({
-        result: data.cmd,
-        time: t1 - t0,
-        hash: hash
-      })
+      response.time = t1 - t0
+      response.hash = hash
       break
     }
 
@@ -112,7 +99,10 @@ function response (e) {
       self.postMessage({
         error: 'Unknown command: ' + data.cmd
       })
+      return
   };
+
+  self.postMessage(response)
 }
 
 init()
